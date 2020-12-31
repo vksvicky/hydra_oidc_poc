@@ -133,7 +133,7 @@ func main() {
 	authMiddleware := handlers.Authenticate(oauth2Config, config.MustString("oidc.client-id"))
 
 	serverAddr := fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port"))
-	indexHandler := handlers.NewIndexHandler(discoveryResponse.EndSessionEndpoint, serverAddr)
+	indexHandler := handlers.NewIndexHandler(discoveryResponse.EndSessionEndpoint, serverAddr, keySet)
 	callbackHandler := handlers.NewCallbackHandler(keySet, oauth2Config)
 	afterLogoutHandler := handlers.NewAfterLogoutHandler(logger)
 

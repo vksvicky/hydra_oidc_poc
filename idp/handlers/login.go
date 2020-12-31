@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"net/http"
 	"time"
 
+	"github.com/go-openapi/runtime"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/csrf"
@@ -19,12 +19,24 @@ import (
 )
 
 type loginHandler struct {
-	loginTemplate  *template.Template
-	bundle         *i18n.Bundle
-	messageCatalog map[string]*i18n.Message
 	adminClient    *admin.Client
+	bundle         *i18n.Bundle
 	logger         *log.Logger
+	loginTemplate  *template.Template
+	messageCatalog *services.MessageCatalog
 }
+
+type acrType string
+
+const (
+	NoCredentials          acrType = "none"
+	ClientCertificate      acrType = "cert"
+	ClientCertificateOTP   acrType = "cert+otp"
+	ClientCertificateToken acrType = "cert+token"
+	Password               acrType = "password"
+	PasswordOTP            acrType = "password+otp"
+	PasswordToken          acrType = "password+token"
+)
 
 type LoginInformation struct {
 	Email    string `form:"email" validate:"required,email"`
@@ -34,13 +46,12 @@ type LoginInformation struct {
 func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	challenge := r.URL.Query().Get("login_challenge")
-	h.logger.Debugf("received challenge %s\n", challenge)
+	h.logger.Debugf("received login challenge %s\n", challenge)
 	validate := validator.New()
 
 	switch r.Method {
 	case http.MethodGet:
-		// GET should render login form
-
+		// render login form
 		err = h.loginTemplate.Lookup("base").Execute(w, map[string]interface{}{
 			"Title":          "Title",
 			csrf.TemplateTag: csrf.TemplateField(r),
@@ -56,7 +67,6 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		break
 	case http.MethodPost:
-		// POST should perform the action
 		var loginInfo LoginInformation
 
 		// validate input
@@ -72,7 +82,7 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			errors := make(map[string]string)
 			for _, err := range err.(validator.ValidationErrors) {
 				accept := r.Header.Get("Accept-Language")
-				errors[err.Field()] = h.lookupErrorMessage(err.Tag(), err.Field(), err.Value(), i18n.NewLocalizer(h.bundle, accept))
+				errors[err.Field()] = h.messageCatalog.LookupErrorMessage(err.Tag(), err.Field(), err.Value(), i18n.NewLocalizer(h.bundle, accept))
 			}
 
 			err = h.loginTemplate.Lookup("base").Execute(w, map[string]interface{}{
@@ -98,14 +108,15 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		subject := "a-user-with-an-id"
 		loginRequest, err := h.adminClient.AcceptLoginRequest(
 			admin.NewAcceptLoginRequestParams().WithLoginChallenge(challenge).WithBody(&models.AcceptLoginRequest{
-				Acr:         "no-creds",
+				Acr:         string(NoCredentials),
 				Remember:    true,
 				RememberFor: 0,
 				Subject:     &subject,
 			}).WithTimeout(time.Second * 10))
 		if err != nil {
-			h.logger.Errorf("error getting logout requests: %v", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			h.logger.Errorf("error getting login request: %#v", err)
+			http.Error(w, err.Error(), err.(*runtime.APIError).Code)
+			return
 		}
 		w.Header().Add("Location", *loginRequest.GetPayload().RedirectTo)
 		w.WriteHeader(http.StatusFound)
@@ -116,45 +127,16 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *loginHandler) lookupErrorMessage(tag string, field string, value interface{}, l *i18n.Localizer) string {
-	var message *i18n.Message
-	message, ok := h.messageCatalog[fmt.Sprintf("%s-%s", field, tag)]
-	if !ok {
-		h.logger.Infof("no specific error message %s-%s", field, tag)
-		message, ok = h.messageCatalog[tag]
-		if !ok {
-			h.logger.Infof("no specific error message %s", tag)
-			message, ok = h.messageCatalog["unknown"]
-			if !ok {
-				h.logger.Error("no default translation found")
-				return tag
-			}
-		}
-	}
-
-	translation, err := l.Localize(&i18n.LocalizeConfig{
-		DefaultMessage: message,
-		TemplateData: map[string]interface{}{
-			"Value": value,
-		},
-	})
-	if err != nil {
-		h.logger.Error(err)
-		return tag
-	}
-	return translation
-}
-
 func NewLoginHandler(logger *log.Logger, ctx context.Context) (*loginHandler, error) {
-	loginTemplate, err := template.ParseFiles("templates/base.html", "templates/login.html")
+	loginTemplate, err := template.ParseFiles("templates/base.gohtml", "templates/login.gohtml")
 	if err != nil {
 		return nil, err
 	}
 	return &loginHandler{
+		adminClient:    ctx.Value(CtxAdminClient).(*admin.Client),
+		bundle:         ctx.Value(services.CtxI18nBundle).(*i18n.Bundle),
 		logger:         logger,
 		loginTemplate:  loginTemplate,
-		bundle:         ctx.Value(services.CtxI18nBundle).(*i18n.Bundle),
-		messageCatalog: ctx.Value(services.CtxI18nCatalog).(map[string]*i18n.Message),
-		adminClient:    ctx.Value(CtxAdminClient).(*admin.Client),
+		messageCatalog: ctx.Value(services.CtxI18nCatalog).(*services.MessageCatalog),
 	}, nil
 }

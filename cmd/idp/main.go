@@ -86,7 +86,10 @@ func main() {
 	if err != nil {
 		logger.Fatalf("error initializing login handler: %v", err)
 	}
-	consentHandler := handlers.NewConsentHandler(logger, handlerContext)
+	consentHandler, err := handlers.NewConsentHandler(logger, handlerContext)
+	if err != nil {
+		logger.Fatalf("error initializing consent handler: %v", err)
+	}
 	logoutHandler := handlers.NewLogoutHandler(logger, handlerContext)
 	logoutSuccessHandler := handlers.NewLogoutSuccessHandler()
 	errorHandler := handlers.NewErrorHandler()

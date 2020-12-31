@@ -1,0 +1,24 @@
+{{ define "content" }}
+    <p>{{ .IntroConsentRequested }}</p>
+    {{ if .client.LogoURI }}
+        <p>
+            <img src="{{ .client.LogoURI }}" alt="{{ .client.ClientName }}"/>
+        </p>
+    {{ end }}
+    <p>{{ .IntroMoreInformation }}</p>
+    <form method="post">
+        {{ .csrfField }}
+        <ul>
+            {{ range .requestedScope }}
+                <li>{{ .Label }}</li>
+            {{ end }}
+        </ul>
+
+        <p>
+            <input type="checkbox" name="consent" id="consent" value="true"/> <label
+                    for="consent">{{ .LabelConsent }}</label>
+        </p>
+
+        <button type="submit">{{ .LabelSubmit }}</button>
+    </form>
+{{ end }}

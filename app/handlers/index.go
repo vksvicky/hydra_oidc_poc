@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/lestrrat-go/jwx/jwk"
+
 	"git.cacert.org/oidc_login/app/services"
 )
 
 type indexHandler struct {
 	logoutUrl  string
 	serverAddr string
+	keySet     *jwk.Set
 }
 
 func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -51,21 +54,26 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var user string
+	var idToken string
 	var ok bool
-	if user, ok = session.Values[sessionKeyUsername].(string); ok {
-
-	}
-	if idToken, ok := session.Values[sessionKeyIdToken].(string); ok {
+	if idToken, ok = session.Values[sessionKeyIdToken].(string); ok {
 		logoutUrl.RawQuery = url.Values{
 			"id_token_hint":            []string{idToken},
 			"post_logout_redirect_uri": []string{fmt.Sprintf("https://%s/after-logout", h.serverAddr)},
 		}.Encode()
+	} else {
+		return
+	}
+
+	oidcToken, err := ParseIdToken(idToken, h.keySet)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	writer.Header().Add("Content-Type", "text/html")
 	err = page.Execute(writer, map[string]interface{}{
-		"User":      user,
+		"User":      oidcToken.Name(),
 		"LogoutURL": logoutUrl.String(),
 	})
 	if err != nil {
@@ -74,6 +82,6 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func NewIndexHandler(logoutUrl string, serverAddr string) *indexHandler {
-	return &indexHandler{logoutUrl: logoutUrl, serverAddr: serverAddr}
+func NewIndexHandler(logoutUrl string, serverAddr string, keySet *jwk.Set) *indexHandler {
+	return &indexHandler{logoutUrl: logoutUrl, serverAddr: serverAddr, keySet: keySet}
 }

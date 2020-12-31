@@ -6,8 +6,7 @@ import (
 
 	"github.com/go-openapi/runtime/client"
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/lestrrat-go/jwx/jwt"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
 	"git.cacert.org/oidc_login/app/services"
@@ -17,10 +16,6 @@ const (
 	sessionKeyAccessToken = iota
 	sessionKeyRefreshToken
 	sessionKeyIdToken
-	sessionKeyUserId
-	sessionKeyRoles
-	sessionKeyEmail
-	sessionKeyUsername
 	sessionRedirectTarget
 )
 
@@ -29,17 +24,24 @@ type oidcCallbackHandler struct {
 	oauth2Config *oauth2.Config
 }
 
-func (c *oidcCallbackHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
-		http.Error(writer, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+func (c *oidcCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
-	if request.URL.Path != "/callback" {
-		http.NotFound(writer, request)
+	if r.URL.Path != "/callback" {
+		http.NotFound(w, r)
 		return
 	}
 
-	code := request.URL.Query().Get("code")
+	errorText := r.URL.Query().Get("error")
+	errorDescription := r.URL.Query().Get("error_description")
+	if errorText != "" {
+		c.RenderErrorTemplate(w, r, errorText, errorDescription)
+		return
+	}
+
+	code := r.URL.Query().Get("code")
 
 	ctx := context.Background()
 	httpClient, err := client.TLSClient(client.TLSClientOptions{InsecureSkipVerify: true})
@@ -47,28 +49,29 @@ func (c *oidcCallbackHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 
 	tok, err := c.oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		logrus.Error(err)
-		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Error(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	session, err := services.GetSessionStore().Get(request, "resource_session")
+	session, err := services.GetSessionStore().Get(r, "resource_session")
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	session.Values[sessionKeyAccessToken] = tok.AccessToken
 	session.Values[sessionKeyRefreshToken] = tok.RefreshToken
-	session.Values[sessionKeyIdToken] = tok.Extra("id_token").(string)
 
-	idToken := tok.Extra("id_token")
-	if parsedIdToken, err := jwt.ParseString(idToken.(string), jwt.WithKeySet(c.keySet), jwt.WithOpenIDClaims()); err != nil {
-		logrus.Error(err)
-		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	idToken := tok.Extra("id_token").(string)
+	session.Values[sessionKeyIdToken] = idToken
+
+	if oidcToken, err := ParseIdToken(idToken, c.keySet); err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
-		logrus.Infof(`
+		log.Infof(`
 ID Token
 ========
 
@@ -80,36 +83,33 @@ Not valid before: %s
 Not valid after:  %s
 
 `,
-			parsedIdToken.Subject(),
-			parsedIdToken.Audience(),
-			parsedIdToken.IssuedAt(),
-			parsedIdToken.Issuer(),
-			parsedIdToken.NotBefore(),
-			parsedIdToken.Expiration(),
+			oidcToken.Subject(),
+			oidcToken.Audience(),
+			oidcToken.IssuedAt(),
+			oidcToken.Issuer(),
+			oidcToken.NotBefore(),
+			oidcToken.Expiration(),
 		)
-
-		session.Values[sessionKeyUserId] = parsedIdToken.Subject()
-
-		if roles, ok := parsedIdToken.Get("Groups"); ok {
-			session.Values[sessionKeyRoles] = roles
-		}
-		if username, ok := parsedIdToken.Get("Username"); ok {
-			session.Values[sessionKeyUsername] = username
-		}
-		if email, ok := parsedIdToken.Get("Email"); ok {
-			session.Values[sessionKeyEmail] = email
-		}
 	}
-	if err = session.Save(request, writer); err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+
+	if err = session.Save(r, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if redirectTarget, ok := session.Values[sessionRedirectTarget]; ok {
-		writer.Header().Set("Location", redirectTarget.(string))
+		w.Header().Set("Location", redirectTarget.(string))
 	} else {
-		writer.Header().Set("Location", "/")
+		w.Header().Set("Location", "/")
 	}
 
-	writer.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusFound)
+}
+
+func (c *oidcCallbackHandler) RenderErrorTemplate(w http.ResponseWriter, r *http.Request, errorText string, errorDescription string) {
+	if errorDescription != "" {
+		http.Error(w, errorDescription, http.StatusForbidden)
+	} else {
+		http.Error(w, errorText, http.StatusForbidden)
+	}
 }
 
 func NewCallbackHandler(keySet *jwk.Set, oauth2Config *oauth2.Config) *oidcCallbackHandler {

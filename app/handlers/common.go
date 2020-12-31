@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/jwt"
+	"github.com/lestrrat-go/jwx/jwt/openid"
 	"golang.org/x/oauth2"
 
 	"git.cacert.org/oidc_login/app/services"
@@ -21,7 +24,7 @@ func Authenticate(oauth2Config *oauth2.Config, clientId string) func(http.Handle
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			if _, ok := session.Values[sessionKeyUserId]; ok {
+			if _, ok := session.Values[sessionKeyIdToken]; ok {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -46,4 +49,13 @@ func Authenticate(oauth2Config *oauth2.Config, clientId string) func(http.Handle
 			w.WriteHeader(http.StatusFound)
 		})
 	}
+}
+
+func ParseIdToken(token string, keySet *jwk.Set) (openid.Token, error) {
+	if parsedIdToken, err := jwt.ParseString(token, jwt.WithKeySet(keySet), jwt.WithOpenIDClaims()); err != nil {
+		return nil, err
+	} else {
+		return parsedIdToken.(openid.Token), nil
+	}
+
 }
