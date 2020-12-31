@@ -15,6 +15,7 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.1.1
 	github.com/ory/hydra-client-go v1.8.5
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/pflag v1.0.5
 	github.com/tidwall/pretty v1.0.1 // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
