@@ -12,11 +12,12 @@ import (
 
 type consentHandler struct {
 	adminClient *admin.Client
+	logger      *log.Logger
 }
 
-func (c *consentHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	consentChallenge := request.URL.Query().Get("consent_challenge")
-	consentRequest, err := c.adminClient.AcceptConsentRequest(
+func (h *consentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	consentChallenge := r.URL.Query().Get("consent_challenge")
+	consentRequest, err := h.adminClient.AcceptConsentRequest(
 		admin.NewAcceptConsentRequestParams().WithConsentChallenge(consentChallenge).WithBody(
 			&models.AcceptConsentRequest{
 				GrantAccessTokenAudience: nil,
@@ -26,14 +27,15 @@ func (c *consentHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 				RememberFor:              86400,
 			}).WithTimeout(time.Second * 10))
 	if err != nil {
-		log.Panic(err)
+		h.logger.Panic(err)
 	}
-	writer.Header().Add("Location", *consentRequest.GetPayload().RedirectTo)
-	writer.WriteHeader(http.StatusFound)
+	w.Header().Add("Location", *consentRequest.GetPayload().RedirectTo)
+	w.WriteHeader(http.StatusFound)
 }
 
-func NewConsentHandler(ctx context.Context) *consentHandler {
+func NewConsentHandler(logger *log.Logger, ctx context.Context) *consentHandler {
 	return &consentHandler{
+		logger:      logger,
 		adminClient: ctx.Value(CtxAdminClient).(*admin.Client),
 	}
 }

@@ -9,15 +9,16 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-openapi/runtime/client"
 	"github.com/gorilla/csrf"
 	"github.com/knadh/koanf"
-	"github.com/knadh/koanf/parsers/json"
 	"github.com/knadh/koanf/parsers/toml"
 	"github.com/knadh/koanf/providers/confmap"
+	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/providers/posflag"
 	hydra "github.com/ory/hydra-client-go/client"
@@ -45,12 +46,6 @@ func main() {
 
 	config := koanf.New(".")
 
-	cFiles, _ := f.GetStringSlice("conf")
-	for _, c := range cFiles {
-		if err := config.Load(file.Provider(c), toml.Parser()); err != nil {
-			logger.Fatalf("error loading config file: %s", err)
-		}
-	}
 	_ = config.Load(confmap.Provider(map[string]interface{}{
 		"server.port":        3000,
 		"server.name":        "login.cacert.localhost",
@@ -58,9 +53,21 @@ func main() {
 		"server.certificate": "certs/idp.cacert.localhost.crt.pem",
 		"admin.url":          "https://hydra.cacert.localhost:4445/",
 	}, "."), nil)
-	_ = config.Load(file.Provider("idp.json"), json.Parser())
+	cFiles, _ := f.GetStringSlice("conf")
+	for _, c := range cFiles {
+		if err := config.Load(file.Provider(c), toml.Parser()); err != nil {
+			logger.Fatalf("error loading config file: %s", err)
+		}
+	}
 	if err := config.Load(posflag.Provider(f, ".", config), nil); err != nil {
 		logger.Fatalf("error loading configuration: %s", err)
+	}
+	const prefix = "IDP_"
+	if err := config.Load(env.Provider(prefix, ".", func(s string) string {
+		return strings.Replace(strings.ToLower(
+			strings.TrimPrefix(s, prefix)), "_", ".", -1)
+	}), nil); err != nil {
+		log.Fatalf("error loading config: %v", err)
 	}
 
 	logger.Infoln("Server is starting")
@@ -75,15 +82,21 @@ func main() {
 	adminClient := hydra.New(clientTransport, nil)
 
 	handlerContext := context.WithValue(ctx, handlers.CtxAdminClient, adminClient.Admin)
-	loginHandler, err := handlers.NewLoginHandler(handlerContext)
+	loginHandler, err := handlers.NewLoginHandler(logger, handlerContext)
 	if err != nil {
 		logger.Fatalf("error initializing login handler: %v", err)
 	}
-	consentHandler := handlers.NewConsentHandler(handlerContext)
+	consentHandler := handlers.NewConsentHandler(logger, handlerContext)
+	logoutHandler := handlers.NewLogoutHandler(logger, handlerContext)
+	logoutSuccessHandler := handlers.NewLogoutSuccessHandler()
+	errorHandler := handlers.NewErrorHandler()
 
 	router := http.NewServeMux()
 	router.Handle("/login", loginHandler)
 	router.Handle("/consent", consentHandler)
+	router.Handle("/logout", logoutHandler)
+	router.Handle("/error", errorHandler)
+	router.Handle("/logout-successful", logoutSuccessHandler)
 	router.Handle("/health", commonHandlers.NewHealthHandler())
 
 	if err != nil {
@@ -94,23 +107,27 @@ func main() {
 	if err != nil {
 		logger.Fatalf("could not parse CSRF key bytes: %v", err)
 	}
-	handler := csrf.Protect(csrfKey, csrf.Secure(true))(router)
 
 	nextRequestId := func() string {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
 	}
+
+	tracing := commonHandlers.Tracing(nextRequestId)
+	logging := commonHandlers.Logging(logger)
+	hsts := commonHandlers.EnableHSTS()
+	csrfProtect := csrf.Protect(
+		csrfKey,
+		csrf.Secure(true),
+		csrf.SameSite(csrf.SameSiteStrictMode),
+		csrf.MaxAge(600))
 
 	tlsConfig := &tls.Config{
 		ServerName: config.String("server.name"),
 		MinVersion: tls.VersionTLS12,
 	}
 	server := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port")),
-		Handler: commonHandlers.Tracing(nextRequestId)(
-			commonHandlers.Logging(logger)(
-				commonHandlers.EnableHSTS()(handler),
-			),
-		),
+		Addr:         fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port")),
+		Handler:      tracing(logging(hsts(csrfProtect(router)))),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
