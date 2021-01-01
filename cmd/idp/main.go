@@ -105,6 +105,7 @@ func main() {
 	logoutHandler := handlers.NewLogoutHandler(handlerContext, logger)
 	logoutSuccessHandler := handlers.NewLogoutSuccessHandler()
 	errorHandler := handlers.NewErrorHandler()
+	staticFiles := http.FileServer(http.Dir("static"))
 
 	router := http.NewServeMux()
 	router.Handle("/login", loginHandler)
@@ -113,6 +114,9 @@ func main() {
 	router.Handle("/error", errorHandler)
 	router.Handle("/logout-successful", logoutSuccessHandler)
 	router.Handle("/health", commonHandlers.NewHealthHandler())
+	router.Handle("/images/", staticFiles)
+	router.Handle("/css/", staticFiles)
+	router.Handle("/js/", staticFiles)
 
 	if err != nil {
 		logger.Fatal(err)

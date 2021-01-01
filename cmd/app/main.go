@@ -131,13 +131,18 @@ func main() {
 	if err != nil {
 		logger.Fatalf("could not initialize index handler: %v", err)
 	}
-	callbackHandler := handlers.NewCallbackHandler(ctx)
+	callbackHandler := handlers.NewCallbackHandler(ctx, logger)
 	afterLogoutHandler := handlers.NewAfterLogoutHandler(logger)
+	staticFiles := http.FileServer(http.Dir("static"))
 
 	router := http.NewServeMux()
 	router.Handle("/", authMiddleware(indexHandler))
 	router.Handle("/callback", callbackHandler)
 	router.Handle("/after-logout", afterLogoutHandler)
+	router.Handle("/health", commonHandlers.NewHealthHandler())
+	router.Handle("/images/", staticFiles)
+	router.Handle("/css/", staticFiles)
+	router.Handle("/js/", staticFiles)
 
 	nextRequestId := func() string {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
