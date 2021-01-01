@@ -85,6 +85,11 @@ func main() {
 	clientTransport := client.New(adminURL.Host, adminURL.Path, []string{adminURL.Scheme})
 	adminClient := hydra.New(clientTransport, nil)
 
+	ctx, err = services.InitDatabase(ctx, services.NewDatabaseParams(config.MustString("db.dsn")))
+	if err != nil {
+		logger.Fatalf("error initializing the database connection: %v", err)
+	}
+
 	handlerContext := context.WithValue(ctx, handlers.CtxAdminClient, adminClient.Admin)
 	loginHandler, err := handlers.NewLoginHandler(handlerContext, logger)
 	if err != nil {
@@ -94,7 +99,7 @@ func main() {
 	if err != nil {
 		logger.Fatalf("error initializing consent handler: %v", err)
 	}
-	logoutHandler := handlers.NewLogoutHandler(logger, handlerContext)
+	logoutHandler := handlers.NewLogoutHandler(handlerContext, logger)
 	logoutSuccessHandler := handlers.NewLogoutSuccessHandler()
 	errorHandler := handlers.NewErrorHandler()
 

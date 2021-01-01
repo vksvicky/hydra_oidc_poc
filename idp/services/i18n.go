@@ -66,5 +66,9 @@ func AddMessages(ctx context.Context) {
 		ID:    "Scope-email-Description",
 		Other: "Access your primary email address.",
 	}
+	messages["WrongOrLockedUserOrInvalidPassword"] = &i18n.Message{
+		ID:    "WrongOrLockedUserOrInvalidPassword",
+		Other: "You entered an invalid username or password or your account has been locked.",
+	}
 	services.GetMessageCatalog(ctx).AddMessages(messages)
 }

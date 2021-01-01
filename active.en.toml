@@ -15,6 +15,7 @@ Scope-offline_access-Description = "Keep access to your information until you re
 Scope-openid-Description = "Request information about your identity."
 Scope-profile-Description = "Access your user profile information including your name, birth date and locale."
 TitleRequestConsent = "Application requests your consent"
+WrongOrLockedUserOrInvalidPassword = "You entered an invalid username or password or your account has been locked."
 
 [LogoutLabel]
 description = "A label on a logout button or link"

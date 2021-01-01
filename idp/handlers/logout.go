@@ -39,7 +39,7 @@ func (h *logoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
 }
 
-func NewLogoutHandler(logger *log.Logger, ctx context.Context) *logoutHandler {
+func NewLogoutHandler(ctx context.Context, logger *log.Logger) *logoutHandler {
 	return &logoutHandler{
 		logger:      logger,
 		adminClient: ctx.Value(CtxAdminClient).(*admin.Client),
