@@ -1,18 +1,4 @@
-[FormLabelEmail]
-description = "Label for an email form field"
-hash = "sha1-ce1aa6771caccb8c901c6627e7ab5c554e9944da"
-other = "E-Mail:"
-
-[FormLabelPassword]
-description = "Label for a password form field"
-hash = "sha1-a3c9deb12ea191bb380ea7ad076417b1fff14f28"
-other = "Passwort:"
-
-[LabelLogin]
-description = "Label for a login button"
-hash = "sha1-ff00822024fca849fe0cef21237b57218e706852"
-other = "Anmelden"
-
-[LoginTitle]
-hash = "sha1-4e5a2893bdcc7d239c1db72e4c4ffbe4bea73174"
-other = "Anmeldung"
+[LabelAcceptCertLogin]
+description = "Label for a button to accept certificate login"
+hash = "sha1-95cf27f4bdee62b51ee8bc673d25a46bcceed452"
+other = "Ja, bitte nutze das Zertifikat"

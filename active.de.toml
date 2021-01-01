@@ -1,3 +1,11 @@
+[CertLoginIntroText]
+hash = "sha1-3d611f594a2194a9b99f8b955e49877bd419a567"
+other = "Du hast ein gültiges Client-Zertifikat für die folgenden E-Mail-Adressen vorgelegt:"
+
+[CertLoginRequestText]
+hash = "sha1-c1ad2600848ad6293ae6df6a04b0b2318bb303f9"
+other = "Willst du dieses Zertifikat für die Anmeldung verwenden oder möchtest du lieber ein anderes Verfahren nutzen?"
+
 [ErrorEmail]
 hash = "sha1-d2306dd8970ff616631a3501791297f31475e416"
 other = "Bitte gib eine gültige E-Mailadresse ein."
@@ -48,6 +56,11 @@ other = "Auf der <a href=\"{{ .clientLink }}\">Beschreibungsseite</a> findest du
 hash = "sha1-cb8efc74b5b726201321e0924747bf38d39629a1"
 other = "Die Anwendung <strong>{{ .client }}</strong> benötigt deine Einwilligungung für die angefragten Berechtigungen."
 
+[LabelAcceptCertLogin]
+description = "Label for a button to accept certificate login"
+hash = "sha1-95cf27f4bdee62b51ee8bc673d25a46bcceed452"
+other = "Ja, bitte nutze das Zertifikat"
+
 [LabelConsent]
 hash = "sha1-5e56a367cf99015bbe98488845541db00b7e04f6"
 other = "Ich erteile hiermit meine Einwilligung, dass die Anwendung die angefragten Berechtigungen erhalten darf."
@@ -56,6 +69,11 @@ other = "Ich erteile hiermit meine Einwilligung, dass die Anwendung die angefrag
 description = "Label for a login button"
 hash = "sha1-ff00822024fca849fe0cef21237b57218e706852"
 other = "Anmelden"
+
+[LabelRejectCertLogin]
+description = "Label for a button to reject certificate login"
+hash = "sha1-911cc305bb66efe162641969aee6b88e5d28e24f"
+other = "Nein, bitte frag nach meinem Passwort"
 
 [LabelSubmit]
 hash = "sha1-2dacf65959849884a011f36f76a04eebea94c5ea"

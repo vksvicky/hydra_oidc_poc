@@ -1,0 +1,14 @@
+{{ define "content" }}
+    <p>{{ .IntroText }}</p>
+    <ul>
+        {{ range .emails }}
+            <li>{{ . }}</li>{{ end }}
+    </ul>
+    <p>{{ .RequestText }}</p>
+    <form method="post">
+        {{ .csrfField }}
+        <input type="hidden" name="action" value="cert-login"/>
+        <button type="submit" name="use-certificate" value="yes">{{ .AcceptLabel }}</button>
+        <button type="submit">{{ .RejectLabel }}</button>
+    </form>
+{{ end }}

@@ -1,3 +1,5 @@
+CertLoginIntroText = "You have presented a valid client certificate for the following email addresses:"
+CertLoginRequestText = "Do you want to use this certificate for authentication or do you want to use a different method?"
 ErrorEmail = "Please enter a valid email address."
 ErrorEmailRequired = "Please enter an email address."
 ErrorPasswordRequired = "Please enter a password."
@@ -26,9 +28,17 @@ other = "Email:"
 description = "Label for a password form field"
 other = "Password:"
 
+[LabelAcceptCertLogin]
+description = "Label for a button to accept certificate login"
+other = "Yes, please use the certificate"
+
 [LabelLogin]
 description = "Label for a login button"
 other = "Login"
+
+[LabelRejectCertLogin]
+description = "Label for a button to reject certificate login"
+other = "No, please ask for my password"
 
 [LogoutLabel]
 description = "A label on a logout button or link"

@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -48,12 +50,13 @@ func main() {
 	config := koanf.New(".")
 
 	_ = config.Load(confmap.Provider(map[string]interface{}{
-		"server.port":        3000,
-		"server.name":        "login.cacert.localhost",
-		"server.key":         "certs/idp.cacert.localhost.key",
-		"server.certificate": "certs/idp.cacert.localhost.crt.pem",
-		"admin.url":          "https://hydra.cacert.localhost:4445/",
-		"i18n.languages":     []string{"en", "de"},
+		"server.port":             3000,
+		"server.name":             "login.cacert.localhost",
+		"server.key":              "certs/idp.cacert.localhost.key",
+		"server.certificate":      "certs/idp.cacert.localhost.crt.pem",
+		"security.client.ca-file": "certs/client_ca.pem",
+		"admin.url":               "https://hydra.cacert.localhost:4445/",
+		"i18n.languages":          []string{"en", "de"},
 	}, "."), nil)
 	cFiles, _ := f.GetStringSlice("conf")
 	for _, c := range cFiles {
@@ -133,16 +136,25 @@ func main() {
 		csrf.SameSite(csrf.SameSiteStrictMode),
 		csrf.MaxAge(600))
 
+	clientCertPool := x509.NewCertPool()
+	pemBytes, err := ioutil.ReadFile(config.MustString("security.client.ca-file"))
+	if err != nil {
+		logger.Fatalf("could not load client CA certificates: %v", err)
+	}
+	clientCertPool.AppendCertsFromPEM(pemBytes)
+
 	tlsConfig := &tls.Config{
 		ServerName: config.String("server.name"),
 		MinVersion: tls.VersionTLS12,
+		ClientAuth: tls.VerifyClientCertIfGiven,
+		ClientCAs:  clientCertPool,
 	}
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port")),
 		Handler:      tracing(logging(hsts(csrfProtect(router)))),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		ReadTimeout:  20 * time.Second,
+		WriteTimeout: 20 * time.Second,
+		IdleTimeout:  30 * time.Second,
 		TLSConfig:    tlsConfig,
 	}
 

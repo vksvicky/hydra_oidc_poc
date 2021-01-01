@@ -89,5 +89,23 @@ func AddMessages(ctx context.Context) {
 		Description: "Label for a login button",
 		Other:       "Login",
 	}
+	messages["CertLoginIntroText"] = &i18n.Message{
+		ID:    "CertLoginIntroText",
+		Other: "You have presented a valid client certificate for the following email addresses:",
+	}
+	messages["CertLoginRequestText"] = &i18n.Message{
+		ID:    "CertLoginRequestText",
+		Other: "Do you want to use this certificate for authentication or do you want to use a different method?",
+	}
+	messages["LabelAcceptCertLogin"] = &i18n.Message{
+		ID:          "LabelAcceptCertLogin",
+		Description: "Label for a button to accept certificate login",
+		Other:       "Yes, please use the certificate",
+	}
+	messages["LabelRejectCertLogin"] = &i18n.Message{
+		ID:          "LabelRejectCertLogin",
+		Description: "Label for a button to reject certificate login",
+		Other:       "No, please ask for my password",
+	}
 	services.GetMessageCatalog(ctx).AddMessages(messages)
 }

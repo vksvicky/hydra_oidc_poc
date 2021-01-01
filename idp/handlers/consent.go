@@ -99,7 +99,7 @@ func (h *consentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				r.Context(),
 				`SELECT email, verified, fname, mname, lname, dob, language, modified
 FROM users
-WHERE id = ?
+WHERE uniqueID = ?
   AND LOCKED = 0`,
 			)
 			if err != nil {

@@ -1,6 +1,7 @@
 {{ define "content" }}
     <form method="post">
         {{ .csrfField }}
+        <input type="hidden" name="action" value="password-login"/>
         {{ if .errors.Form}}<p>{{ .errors.Form }}</p>{{ end }}
         {{ if .errors.Email }}<p>{{ .errors.Email }}</p>{{ end }}
         <label for="email">{{ .LabelEmail }}</label>
