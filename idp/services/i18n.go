@@ -70,5 +70,24 @@ func AddMessages(ctx context.Context) {
 		ID:    "WrongOrLockedUserOrInvalidPassword",
 		Other: "You entered an invalid username or password or your account has been locked.",
 	}
+	messages["LoginTitle"] = &i18n.Message{
+		ID:    "LoginTitle",
+		Other: "Login",
+	}
+	messages["LabelEmail"] = &i18n.Message{
+		ID:          "FormLabelEmail",
+		Description: "Label for an email form field",
+		Other:       "Email:",
+	}
+	messages["LabelPassword"] = &i18n.Message{
+		ID:          "FormLabelPassword",
+		Description: "Label for a password form field",
+		Other:       "Password:",
+	}
+	messages["LabelLogin"] = &i18n.Message{
+		ID:          "LabelLogin",
+		Description: "Label for a login button",
+		Other:       "Login",
+	}
 	services.GetMessageCatalog(ctx).AddMessages(messages)
 }

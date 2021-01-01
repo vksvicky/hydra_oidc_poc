@@ -10,12 +10,25 @@ IntroConsentMoreInformation = "You can find more information about <strong>{{ .c
 IntroConsentRequested = "The <strong>{{ .client }}</strong> application wants your consent for the requested set of permissions."
 LabelConsent = "I hereby agree that the application may get the requested permissions."
 LabelSubmit = "Submit"
+LoginTitle = "Login"
 Scope-email-Description = "Access your primary email address."
 Scope-offline_access-Description = "Keep access to your information until you revoke the permission."
 Scope-openid-Description = "Request information about your identity."
 Scope-profile-Description = "Access your user profile information including your name, birth date and locale."
 TitleRequestConsent = "Application requests your consent"
 WrongOrLockedUserOrInvalidPassword = "You entered an invalid username or password or your account has been locked."
+
+[FormLabelEmail]
+description = "Label for an email form field"
+other = "Email:"
+
+[FormLabelPassword]
+description = "Label for a password form field"
+other = "Password:"
+
+[LabelLogin]
+description = "Label for a login button"
+other = "Login"
 
 [LogoutLabel]
 description = "A label on a logout button or link"

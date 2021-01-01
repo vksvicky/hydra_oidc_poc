@@ -38,7 +38,7 @@ func (m *MessageCatalog) LookupErrorMessage(tag string, field string, value inte
 			m.logger.Infof("no specific error message %s", tag)
 			message, ok = m.messages["unknown"]
 			if !ok {
-				m.logger.Error("no default translation found")
+				m.logger.Warnf("no default translation found")
 				return tag
 			}
 		}
@@ -69,6 +69,7 @@ func (m *MessageCatalog) LookupMessage(id string, templateData map[string]interf
 		}
 		return translation
 	} else {
+		m.logger.Warnf("no translation found for %s", id)
 		return id
 	}
 }

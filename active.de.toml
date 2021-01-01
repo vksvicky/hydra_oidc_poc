@@ -18,6 +18,16 @@ other = "Dieses Feld wird benötigt."
 hash = "sha1-e5fd9aa24c9417e7332e6f25936ae2a6ec8f1524"
 other = "Unbekannter Fehler"
 
+[FormLabelEmail]
+description = "Label for an email form field"
+hash = "sha1-ce1aa6771caccb8c901c6627e7ab5c554e9944da"
+other = "E-Mail:"
+
+[FormLabelPassword]
+description = "Label for a password form field"
+hash = "sha1-a3c9deb12ea191bb380ea7ad076417b1fff14f28"
+other = "Passwort:"
+
 [IndexGreeting]
 hash = "sha1-d4a13058e497fa24143ea96d50d82b818455ef61"
 other = "Hallo {{ .User }}"
@@ -42,9 +52,18 @@ other = "Die Anwendung <strong>{{ .client }}</strong> benötigt deine Einwilligu
 hash = "sha1-5e56a367cf99015bbe98488845541db00b7e04f6"
 other = "Ich erteile hiermit meine Einwilligung, dass die Anwendung die angefragten Berechtigungen erhalten darf."
 
+[LabelLogin]
+description = "Label for a login button"
+hash = "sha1-ff00822024fca849fe0cef21237b57218e706852"
+other = "Anmelden"
+
 [LabelSubmit]
 hash = "sha1-2dacf65959849884a011f36f76a04eebea94c5ea"
 other = "Abschicken"
+
+[LoginTitle]
+hash = "sha1-4e5a2893bdcc7d239c1db72e4c4ffbe4bea73174"
+other = "Anmeldung"
 
 [LogoutLabel]
 description = "A label on a logout button or link"
