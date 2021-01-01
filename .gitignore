@@ -2,5 +2,7 @@
 /certs/
 /hydra.yaml
 /idp.toml
+/node_modules/
 /resource_app.toml
 /sessions/
+/static/
