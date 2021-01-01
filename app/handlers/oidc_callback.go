@@ -22,6 +22,7 @@ const (
 
 type oidcCallbackHandler struct {
 	keySet       *jwk.Set
+	logger       *log.Logger
 	oauth2Config *oauth2.Config
 }
 
@@ -38,7 +39,7 @@ func (c *oidcCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	errorText := r.URL.Query().Get("error")
 	errorDescription := r.URL.Query().Get("error_description")
 	if errorText != "" {
-		c.RenderErrorTemplate(w, r, errorText, errorDescription)
+		c.RenderErrorTemplate(w, errorText, errorDescription, http.StatusForbidden)
 		return
 	}
 
@@ -50,7 +51,7 @@ func (c *oidcCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	tok, err := c.oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		log.Error(err)
+		c.logger.Error(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -68,11 +69,11 @@ func (c *oidcCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	session.Values[sessionKeyIdToken] = idToken
 
 	if oidcToken, err := ParseIdToken(idToken, c.keySet); err != nil {
-		log.Error(err)
+		c.logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
-		log.Infof(`
+		c.logger.Debugf(`
 ID Token
 ========
 
@@ -105,17 +106,18 @@ Not valid after:  %s
 	w.WriteHeader(http.StatusFound)
 }
 
-func (c *oidcCallbackHandler) RenderErrorTemplate(w http.ResponseWriter, r *http.Request, errorText string, errorDescription string) {
+func (c *oidcCallbackHandler) RenderErrorTemplate(w http.ResponseWriter, errorText string, errorDescription string, status int) {
 	if errorDescription != "" {
-		http.Error(w, errorDescription, http.StatusForbidden)
+		http.Error(w, errorDescription, status)
 	} else {
-		http.Error(w, errorText, http.StatusForbidden)
+		http.Error(w, errorText, status)
 	}
 }
 
-func NewCallbackHandler(ctx context.Context) *oidcCallbackHandler {
+func NewCallbackHandler(ctx context.Context, logger *log.Logger) *oidcCallbackHandler {
 	return &oidcCallbackHandler{
 		keySet:       commonServices.GetJwkSet(ctx),
+		logger:       logger,
 		oauth2Config: commonServices.GetOAuth2Config(ctx),
 	}
 }
