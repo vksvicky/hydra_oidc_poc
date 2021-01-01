@@ -1,5 +1,6 @@
-/*.toml
 /.idea/
 /certs/
 /hydra.yaml
+/idp.toml
+/resource_app.toml
 /sessions/

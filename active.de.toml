@@ -1,0 +1,72 @@
+[ErrorEmail]
+hash = "sha1-d2306dd8970ff616631a3501791297f31475e416"
+other = "Bitte gib eine gültige E-Mailadresse ein."
+
+[ErrorEmailRequired]
+hash = "sha1-e61b6eae7b3294d71eed349d7f1509d20ce35162"
+other = "Bitte gib eine E-Mailadresse ein."
+
+[ErrorPasswordRequired]
+hash = "sha1-13c9d732467bf266a77ddfd1bbbe09dde518f9b0"
+other = "Bitte gib ein Passwort ein."
+
+[ErrorRequired]
+hash = "sha1-31632fcec9d22a8463757f459e51c7c0eccd1f28"
+other = "Dieses Feld wird benötigt."
+
+[ErrorUnknown]
+hash = "sha1-e5fd9aa24c9417e7332e6f25936ae2a6ec8f1524"
+other = "Unbekannter Fehler"
+
+[IndexGreeting]
+hash = "sha1-d4a13058e497fa24143ea96d50d82b818455ef61"
+other = "Hallo {{ .User }}"
+
+[IndexIntroductionText]
+hash = "sha1-c2c530e263fc9c38482338ed290aafb496794179"
+other = "Das ist eine zugriffsgeschützte Resource"
+
+[IndexTitle]
+hash = "sha1-eccb2b889c068d3f25496c1dad3fb0f88d021bd9"
+other = "Willkommen in der Demo-Anwendung"
+
+[IntroConsentMoreInformation]
+hash = "sha1-f58b8378238bd433deef3c3e6b0b70d0fd0dd59e"
+other = "Auf der <a href=\"{{ .clientLink }}\">Beschreibungsseite</a> findest du mehr Informationen zu <strong>{{ .client }}</strong>."
+
+[IntroConsentRequested]
+hash = "sha1-cb8efc74b5b726201321e0924747bf38d39629a1"
+other = "Die Anwendung <strong>{{ .client }}</strong> benötigt deine Einwilligungung für die angefragten Berechtigungen."
+
+[LabelConsent]
+hash = "sha1-5e56a367cf99015bbe98488845541db00b7e04f6"
+other = "Ich erteile hiermit meine Einwilligung, dass die Anwendung die angefragten Berechtigungen erhalten darf."
+
+[LabelSubmit]
+hash = "sha1-2dacf65959849884a011f36f76a04eebea94c5ea"
+other = "Abschicken"
+
+[LogoutLabel]
+description = "A label on a logout button or link"
+hash = "sha1-8acfdeb9a8286f00c8e5dd48471cfdc994807579"
+other = "Ausloggen"
+
+[Scope-email-Description]
+hash = "sha1-e50e5ea384cad8fac6f918d698be373b1362b351"
+other = "Zugriff auf deine primäre E-Mail-Adresse."
+
+[Scope-offline_access-Description]
+hash = "sha1-732881bf998daa62cbad8615b2e6feb7a053b123"
+other = "Zugriff auf deine Informationen behalten, bis du diese Zustimmung widerrufst."
+
+[Scope-openid-Description]
+hash = "sha1-0ad714e7a22b97d8247b70254990256bffa2ef76"
+other = "Informationen über deine Identität abfragen."
+
+[Scope-profile-Description]
+hash = "sha1-f12d1d8af26e41aa82a3c1d6a7b7f0dba0313be1"
+other = "Deine Nutzerprofilinformationen inklusive Name, Geburtsdatum und Spracheinstellung abfragen."
+
+[TitleRequestConsent]
+hash = "sha1-14984a9e08cda5390677458a98408baa955f9f8b"
+other = "Anwendung erbittet deine Zustimmung"

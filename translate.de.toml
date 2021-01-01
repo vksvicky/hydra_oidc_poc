@@ -1,0 +1,16 @@
+[IndexGreeting]
+hash = "sha1-d4a13058e497fa24143ea96d50d82b818455ef61"
+other = "Hallo {{ .User }}"
+
+[IndexIntroductionText]
+hash = "sha1-c2c530e263fc9c38482338ed290aafb496794179"
+other = "Das ist eine zugriffsgeschützte Resource"
+
+[IndexTitle]
+hash = "sha1-eccb2b889c068d3f25496c1dad3fb0f88d021bd9"
+other = "Willkommen in der Demo-Anwendung"
+
+[LogoutLabel]
+description = "A label on a logout button or link"
+hash = "sha1-8acfdeb9a8286f00c8e5dd48471cfdc994807579"
+other = "Ausloggen"

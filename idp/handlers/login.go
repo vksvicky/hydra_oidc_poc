@@ -15,7 +15,7 @@ import (
 	"github.com/ory/hydra-client-go/models"
 	log "github.com/sirupsen/logrus"
 
-	"git.cacert.org/oidc_login/idp/services"
+	commonServices "git.cacert.org/oidc_login/common/services"
 )
 
 type loginHandler struct {
@@ -23,7 +23,7 @@ type loginHandler struct {
 	bundle         *i18n.Bundle
 	logger         *log.Logger
 	loginTemplate  *template.Template
-	messageCatalog *services.MessageCatalog
+	messageCatalog *commonServices.MessageCatalog
 }
 
 type acrType string
@@ -127,16 +127,17 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewLoginHandler(logger *log.Logger, ctx context.Context) (*loginHandler, error) {
-	loginTemplate, err := template.ParseFiles("templates/base.gohtml", "templates/login.gohtml")
+func NewLoginHandler(ctx context.Context, logger *log.Logger) (*loginHandler, error) {
+	loginTemplate, err := template.ParseFiles(
+		"templates/idp/base.gohtml", "templates/idp/login.gohtml")
 	if err != nil {
 		return nil, err
 	}
 	return &loginHandler{
 		adminClient:    ctx.Value(CtxAdminClient).(*admin.Client),
-		bundle:         ctx.Value(services.CtxI18nBundle).(*i18n.Bundle),
+		bundle:         commonServices.GetI18nBundle(ctx),
 		logger:         logger,
 		loginTemplate:  loginTemplate,
-		messageCatalog: ctx.Value(services.CtxI18nCatalog).(*services.MessageCatalog),
+		messageCatalog: commonServices.GetMessageCatalog(ctx),
 	}, nil
 }

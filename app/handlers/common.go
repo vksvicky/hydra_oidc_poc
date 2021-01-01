@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/base64"
 	"net/http"
 	"net/url"
@@ -8,7 +9,6 @@ import (
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/lestrrat-go/jwx/jwt/openid"
-	"golang.org/x/oauth2"
 
 	"git.cacert.org/oidc_login/app/services"
 	commonServices "git.cacert.org/oidc_login/common/services"
@@ -16,7 +16,7 @@ import (
 
 const sessionName = "resource_session"
 
-func Authenticate(oauth2Config *oauth2.Config, clientId string) func(http.Handler) http.Handler {
+func Authenticate(ctx context.Context, clientId string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			session, err := services.GetSessionStore().Get(r, sessionName)
@@ -34,7 +34,7 @@ func Authenticate(oauth2Config *oauth2.Config, clientId string) func(http.Handle
 				return
 			}
 			var authUrl *url.URL
-			if authUrl, err = url.Parse(oauth2Config.Endpoint.AuthURL); err != nil {
+			if authUrl, err = url.Parse(commonServices.GetOAuth2Config(ctx).Endpoint.AuthURL); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}

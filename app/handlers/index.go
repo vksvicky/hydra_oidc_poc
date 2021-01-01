@@ -1,20 +1,26 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 
 	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"git.cacert.org/oidc_login/app/services"
+	commonServices "git.cacert.org/oidc_login/common/services"
 )
 
 type indexHandler struct {
-	logoutUrl  string
-	serverAddr string
-	keySet     *jwk.Set
+	bundle         *i18n.Bundle
+	indexTemplate  *template.Template
+	keySet         *jwk.Set
+	logoutUrl      string
+	messageCatalog *commonServices.MessageCatalog
+	serverAddr     string
 }
 
 func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -26,23 +32,10 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		http.NotFound(writer, request)
 		return
 	}
+	accept := request.Header.Get("Accept-Language")
+	localizer := i18n.NewLocalizer(h.bundle, accept)
 	writer.WriteHeader(http.StatusOK)
 
-	page, err := template.New("").Parse(`
-<!DOCTYPE html>
-<html lang="en">
-<head><title>Auth test</title></head>
-<body>
-<h1>Hello {{ .User }}</h1>
-<p>This is an authorization protected resource</p>
-<a href="{{ .LogoutURL }}">Logout</a>
-</body>
-</html>
-`)
-	if err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	session, err := services.GetSessionStore().Get(request, sessionName)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -72,9 +65,14 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	}
 
 	writer.Header().Add("Content-Type", "text/html")
-	err = page.Execute(writer, map[string]interface{}{
-		"User":      oidcToken.Name(),
-		"LogoutURL": logoutUrl.String(),
+	err = h.indexTemplate.Lookup("base").Execute(writer, map[string]interface{}{
+		"Title": h.messageCatalog.LookupMessage("IndexTitle", nil, localizer),
+		"Greeting": h.messageCatalog.LookupMessage("IndexGreeting", map[string]interface{}{
+			"User": oidcToken.Name(),
+		}, localizer),
+		"IntroductionText": h.messageCatalog.LookupMessage("IndexIntroductionText", nil, localizer),
+		"LogoutLabel":      h.messageCatalog.LookupMessage("LogoutLabel", nil, localizer),
+		"LogoutURL":        logoutUrl.String(),
 	})
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -82,6 +80,18 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func NewIndexHandler(logoutUrl string, serverAddr string, keySet *jwk.Set) *indexHandler {
-	return &indexHandler{logoutUrl: logoutUrl, serverAddr: serverAddr, keySet: keySet}
+func NewIndexHandler(ctx context.Context, serverAddr string) (*indexHandler, error) {
+	indexTemplate, err := template.ParseFiles(
+		"templates/app/base.gohtml", "templates/app/index.gohtml")
+	if err != nil {
+		return nil, err
+	}
+	return &indexHandler{
+		bundle:         commonServices.GetI18nBundle(ctx),
+		indexTemplate:  indexTemplate,
+		keySet:         commonServices.GetJwkSet(ctx),
+		logoutUrl:      commonServices.GetOidcConfig(ctx).EndSessionEndpoint,
+		messageCatalog: commonServices.GetMessageCatalog(ctx),
+		serverAddr:     serverAddr,
+	}, nil
 }

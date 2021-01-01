@@ -10,6 +10,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"git.cacert.org/oidc_login/app/services"
+	commonServices "git.cacert.org/oidc_login/common/services"
 )
 
 const (
@@ -112,6 +113,9 @@ func (c *oidcCallbackHandler) RenderErrorTemplate(w http.ResponseWriter, r *http
 	}
 }
 
-func NewCallbackHandler(keySet *jwk.Set, oauth2Config *oauth2.Config) *oidcCallbackHandler {
-	return &oidcCallbackHandler{keySet: keySet, oauth2Config: oauth2Config}
+func NewCallbackHandler(ctx context.Context) *oidcCallbackHandler {
+	return &oidcCallbackHandler{
+		keySet:       commonServices.GetJwkSet(ctx),
+		oauth2Config: commonServices.GetOAuth2Config(ctx),
+	}
 }

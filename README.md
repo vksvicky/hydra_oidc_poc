@@ -186,3 +186,33 @@ Now you can start Hydra, the IDP and the demo app in 3 terminal windows:
 Visit https://app.cacert.localhost:4000/ in a Browser and you will be directed
 through the OpenID connect authorization code flow.
 
+## Translations
+
+This application uses [go-i18n](https://github.com/nicksnyder/go-i18n/) for internationalization (i18n) support.
+
+The translation workflow needs the `go18n` binary which can be installed via
+
+```
+go get -u  github.com/nicksnyder/go-i18n/v2/goi18n
+```
+
+To extract new messages from the code run
+
+```
+goi18n extract .
+```
+
+Then use
+
+```
+goi18n merge active.*.toml
+```
+
+to create TOML files for translation as `translate.<locale>.toml`. After translating the messages run
+
+```
+goi18n merge active.*.toml translate.*.toml
+```
+
+to merge the messages back into the active translation files. To add a new language you need to add the language code
+to the languages configuration option (default is defined in the configmap in cmd/idp/main.go and cmd/app/main.go).

@@ -18,10 +18,8 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/providers/posflag"
-	"github.com/lestrrat-go/jwx/jwk"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-	"golang.org/x/oauth2"
 
 	"git.cacert.org/oidc_login/app/handlers"
 	"git.cacert.org/oidc_login/app/services"
@@ -52,6 +50,7 @@ func main() {
 		"server.certificate": "certs/app.cacert.localhost.crt.pem",
 		"oidc.server":        "https://auth.cacert.localhost:4444/",
 		"session.path":       "sessions/app",
+		"i18n.languages":     []string{"en", "de"},
 	}, "."), nil)
 	cFiles, _ := f.GetStringSlice("conf")
 	for _, c := range cFiles {
@@ -76,6 +75,10 @@ func main() {
 	oidcServer := config.MustString("oidc.server")
 	oidcClientId := config.MustString("oidc.client-id")
 	oidcClientSecret := config.MustString("oidc.client-secret")
+
+	ctx := context.Background()
+	ctx = commonServices.InitI18n(ctx, logger, config.Strings("i18n.languages"))
+	services.AddMessages(ctx)
 
 	sessionPath := config.MustString("session.path")
 	sessionAuthKey, err := base64.StdEncoding.DecodeString(config.String("session.auth-key"))
@@ -109,32 +112,26 @@ func main() {
 		log.Infof("put the following in your resource_app.toml:\n%s", string(tomlData))
 	}
 
-	var discoveryResponse *commonServices.OpenIDConfiguration
-	apiClient := &http.Client{}
-	if discoveryResponse, err = commonServices.DiscoverOIDC(logger, oidcServer, apiClient); err != nil {
+	if ctx, err = commonServices.DiscoverOIDC(ctx, logger, &commonServices.OidcParams{
+		OidcServer:       oidcServer,
+		OidcClientId:     oidcClientId,
+		OidcClientSecret: oidcClientSecret,
+		APIClient:        &http.Client{},
+	}); err != nil {
 		log.Fatalf("OpenID Connect discovery failed: %s", err)
-	}
-	oauth2Config := &oauth2.Config{
-		ClientID:     oidcClientId,
-		ClientSecret: oidcClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  discoveryResponse.AuthorizationEndpoint,
-			TokenURL: discoveryResponse.TokenEndpoint,
-		},
-		Scopes: []string{"openid", "offline"},
-	}
-	keySet, err := jwk.FetchHTTP(discoveryResponse.JwksUri, jwk.WithHTTPClient(apiClient))
-	if err != nil {
-		log.Fatalf("could not fetch JWKs: %s", err)
 	}
 
 	services.InitSessionStore(logger, sessionPath, sessionAuthKey, sessionEncKey)
 
-	authMiddleware := handlers.Authenticate(oauth2Config, config.MustString("oidc.client-id"))
+	authMiddleware := handlers.Authenticate(ctx, oidcClientId)
 
 	serverAddr := fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port"))
-	indexHandler := handlers.NewIndexHandler(discoveryResponse.EndSessionEndpoint, serverAddr, keySet)
-	callbackHandler := handlers.NewCallbackHandler(keySet, oauth2Config)
+
+	indexHandler, err := handlers.NewIndexHandler(ctx, serverAddr)
+	if err != nil {
+		logger.Fatalf("could not initialize index handler: %v", err)
+	}
+	callbackHandler := handlers.NewCallbackHandler(ctx)
 	afterLogoutHandler := handlers.NewAfterLogoutHandler(logger)
 
 	router := http.NewServeMux()
@@ -172,7 +169,6 @@ func main() {
 		logger.Infoln("Server is shutting down...")
 		atomic.StoreInt32(&commonHandlers.Healthy, 0)
 
-		ctx := context.Background()
 		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 

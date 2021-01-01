@@ -26,6 +26,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	commonHandlers "git.cacert.org/oidc_login/common/handlers"
+	commonServices "git.cacert.org/oidc_login/common/services"
 	"git.cacert.org/oidc_login/idp/handlers"
 	"git.cacert.org/oidc_login/idp/services"
 )
@@ -52,6 +53,7 @@ func main() {
 		"server.key":         "certs/idp.cacert.localhost.key",
 		"server.certificate": "certs/idp.cacert.localhost.crt.pem",
 		"admin.url":          "https://hydra.cacert.localhost:4445/",
+		"i18n.languages":     []string{"en", "de"},
 	}, "."), nil)
 	cFiles, _ := f.GetStringSlice("conf")
 	for _, c := range cFiles {
@@ -73,7 +75,9 @@ func main() {
 	logger.Infoln("Server is starting")
 	ctx := context.Background()
 
-	ctx = services.InitI18n(ctx, logger)
+	ctx = commonServices.InitI18n(ctx, logger, config.Strings("i18n.languages"))
+	services.AddMessages(ctx)
+
 	adminURL, err := url.Parse(config.MustString("admin.url"))
 	if err != nil {
 		logger.Fatalf("error parsing admin URL: %v", err)
@@ -82,11 +86,11 @@ func main() {
 	adminClient := hydra.New(clientTransport, nil)
 
 	handlerContext := context.WithValue(ctx, handlers.CtxAdminClient, adminClient.Admin)
-	loginHandler, err := handlers.NewLoginHandler(logger, handlerContext)
+	loginHandler, err := handlers.NewLoginHandler(handlerContext, logger)
 	if err != nil {
 		logger.Fatalf("error initializing login handler: %v", err)
 	}
-	consentHandler, err := handlers.NewConsentHandler(logger, handlerContext)
+	consentHandler, err := handlers.NewConsentHandler(handlerContext, logger)
 	if err != nil {
 		logger.Fatalf("error initializing consent handler: %v", err)
 	}

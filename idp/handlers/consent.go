@@ -15,7 +15,7 @@ import (
 	"github.com/ory/hydra-client-go/models"
 	log "github.com/sirupsen/logrus"
 
-	"git.cacert.org/oidc_login/idp/services"
+	commonServices "git.cacert.org/oidc_login/common/services"
 )
 
 type consentHandler struct {
@@ -23,7 +23,7 @@ type consentHandler struct {
 	bundle          *i18n.Bundle
 	consentTemplate *template.Template
 	logger          *log.Logger
-	messageCatalog  *services.MessageCatalog
+	messageCatalog  *commonServices.MessageCatalog
 }
 
 type ConsentInformation struct {
@@ -151,17 +151,18 @@ func (h *consentHandler) mapRequestedScope(scope models.StringSlicePipeDelimiter
 	return result
 }
 
-func NewConsentHandler(logger *log.Logger, ctx context.Context) (*consentHandler, error) {
-	consentTemplate, err := template.ParseFiles("templates/base.gohtml", "templates/consent.gohtml")
+func NewConsentHandler(ctx context.Context, logger *log.Logger) (*consentHandler, error) {
+	consentTemplate, err := template.ParseFiles(
+		"templates/idp/base.gohtml", "templates/idp/consent.gohtml")
 	if err != nil {
 		return nil, err
 	}
 
 	return &consentHandler{
 		adminClient:     ctx.Value(CtxAdminClient).(*admin.Client),
-		bundle:          ctx.Value(services.CtxI18nBundle).(*i18n.Bundle),
+		bundle:          commonServices.GetI18nBundle(ctx),
 		consentTemplate: consentTemplate,
 		logger:          logger,
-		messageCatalog:  ctx.Value(services.CtxI18nCatalog).(*services.MessageCatalog),
+		messageCatalog:  commonServices.GetMessageCatalog(ctx),
 	}, nil
 }
