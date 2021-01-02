@@ -1,16 +1,43 @@
 {{ define "content" }}
-    <form class="form-signin" method="post">
+    <form class="form-signin{{ if .errors }} was-validated{{ end }}" method="post">
         <img src="/images/CAcert-logo.svg" width="300" height="68" alt="CAcert" class="mb-4">
         <h1 class="h3 mb-3">{{ .Title }}</h1>
         {{ .csrfField }}
         <input type="hidden" name="action" value="password-login"/>
-        {{ if .errors.Form}}<p>{{ .errors.Form }}</p>{{ end }}
-        {{ if .errors.Email }}<p>{{ .errors.Email }}</p>{{ end }}
+        {{ if .errors.Form}}<p class="text-danger">{{ .errors.Form }}</p>{{ end }}
         <label for="email" class="sr-only">{{ .LabelEmail }}</label>
-        <input type="email" id="email" class="form-control" placeholder="{{ .LabelEmail }}" required autofocus name="email" value="{{ .Email }}"/><br/>
-        {{ if .errors.Password }}<p>{{ .errors.Password }}</p>{{ end }}
+        <div class="input-group mb-2 mr-sm-2{{ if .errors.Email }} is-invalid{{ end }}">
+            <div class="input-group-prepend">
+                <div class="input-group-text" id="emailInputPrepend">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                         class="bi bi-envelope" viewBox="0 0 16 16">
+                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383l-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/>
+                    </svg>
+                </div>
+            </div>
+            <input type="email" id="email" class="form-control{{ if .errors.Email }} is-invalid{{ end }}"
+                   placeholder="{{ .LabelEmail }}" required autofocus
+                   name="email" value="{{ .Email }}" aria-describedby="emailInputPrepend"/><br/>
+            {{ if .errors.Email }}
+                <div class="invalid-feedback">{{ .errors.Email }}</div>{{ end }}
+        </div>
         <label for="password" class="sr-only">{{ .LabelPassword }}</label>
-        <input type="password" id="password" class="form-control" placeholder="{{ .LabelPassword }}" name="password" value=""/><br/>
+        <div class="input-group mb-2 mr-sm-2{{ if .errors.Password }} is-invalid{{ end }}">
+            <div class="input-group-prepend" id="passwordInputPrepend">
+                <div class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-key"
+                         viewBox="0 0 16 16">
+                        <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8zm4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5z"/>
+                        <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <input type="password" id="password" class="form-control{{ if .errors.Password }} is-invalid{{ end }}"
+                   placeholder="{{ .LabelPassword }}" name="password" required
+                   value="" aria-describedby="passwordInputPrepend"/>
+            {{ if .errors.Password }}
+                <div class="invalid-feedback">{{ .errors.Password }}</div>{{ end }}
+        </div>
         <button class="btn btn-lg btn-primary btn-block" type="submit">{{ .LabelLogin }}</button>
     </form>
 {{ end }}
