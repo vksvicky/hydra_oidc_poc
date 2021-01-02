@@ -32,6 +32,7 @@ module.exports = {
         path: path.resolve(__dirname, 'static'),
         filename: 'js/[name].bundle.js',
     },
+    devtool: 'source-map',
     optimization: {
         minimize: true,
         minimizer: [new TerserPlugin()],
@@ -59,14 +60,14 @@ module.exports = {
                     loader: 'postcss-loader',
                     options: {
                         postcssOptions: {
-                            plugins: function () {
-                                return [
-                                    require('precss'),
-                                    require('autoprefixer'),
-                                ];
-                            }
-                        }
-                    }
+                            plugins: [
+                                [
+                                    'precss',
+                                    'autoprefixer',
+                                ],
+			    ],
+                        },
+                    },
                 }, {
                     loader: 'sass-loader',
                 }]
