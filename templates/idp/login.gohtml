@@ -1,14 +1,16 @@
 {{ define "content" }}
-    <form method="post">
+    <form class="form-signin" method="post">
+        <img src="/images/CAcert-logo.svg" width="300" height="68" alt="CAcert" class="mb-4">
+        <h1 class="h3 mb-3">{{ .Title }}</h1>
         {{ .csrfField }}
         <input type="hidden" name="action" value="password-login"/>
         {{ if .errors.Form}}<p>{{ .errors.Form }}</p>{{ end }}
         {{ if .errors.Email }}<p>{{ .errors.Email }}</p>{{ end }}
-        <label for="email">{{ .LabelEmail }}</label>
-        <input type="text" id="email" name="email" value="{{ .Email }}"/><br/>
+        <label for="email" class="sr-only">{{ .LabelEmail }}</label>
+        <input type="email" id="email" class="form-control" placeholder="{{ .LabelEmail }}" required autofocus name="email" value="{{ .Email }}"/><br/>
         {{ if .errors.Password }}<p>{{ .errors.Password }}</p>{{ end }}
-        <label for="password">{{ .LabelPassword }}</label>
-        <input type="password" id="password" name="password" value=""/><br/>
-        <button type="submit">{{ .LabelLogin }}</button>
+        <label for="password" class="sr-only">{{ .LabelPassword }}</label>
+        <input type="password" id="password" class="form-control" placeholder="{{ .LabelPassword }}" name="password" value=""/><br/>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">{{ .LabelLogin }}</button>
     </form>
 {{ end }}

@@ -1,14 +1,16 @@
 {{ define "content" }}
-    <p>{{ .IntroText }}</p>
-    <ul>
-        {{ range .emails }}
-            <li>{{ . }}</li>{{ end }}
-    </ul>
-    <p>{{ .RequestText }}</p>
-    <form method="post">
+    <form class="form-signin" method="post">
+        <img src="/images/CAcert-logo.svg" width="300" height="68" alt="CAcert" class="mb-4">
+        <h1 class="h3 mb-3">{{ .Title }}</h1>
+        <p class="text-left">{{ .IntroText }}</p>
+        <ul class="text-left">
+            {{ range .emails }}
+                <li>{{ . }}</li>{{ end }}
+        </ul>
+        <p class="text-left">{{ .RequestText }}</p>
         {{ .csrfField }}
         <input type="hidden" name="action" value="cert-login"/>
-        <button type="submit" name="use-certificate" value="yes">{{ .AcceptLabel }}</button>
-        <button type="submit">{{ .RejectLabel }}</button>
+        <button class="btn btn-lg btn-block btn-primary" type="submit" name="use-certificate" value="yes">{{ .AcceptLabel }}</button>
+        <button class="btn btn-block btn-outline-secondary" type="submit">{{ .RejectLabel }}</button>
     </form>
 {{ end }}

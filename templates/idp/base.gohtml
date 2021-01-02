@@ -12,6 +12,7 @@
         <link rel="icon" href="/images/favicon-128.png" sizes="128x128">
         <link rel="icon" href="/images/favicon-192.png" sizes="192x192">
         <link rel="icon" href="/images/favicon-228.png" sizes="228x228">
+        <link rel="icon" href="/images/favicon.ico">
 
         <!-- Android -->
         <link rel="shortcut icon" sizes="196x196" href="/images/favicon-196.png">
@@ -22,11 +23,10 @@
         <link rel="apple-touch-icon" href="/images/favicon-180.png" sizes="180x180">
 
         <link rel="stylesheet" href="/css/cacert.bundle.css">
+        <meta name="theme-color" content="#11568c">
         <title>{{ .Title }}</title>
     </head>
-    <body>
-    <h1>{{ .Title }}</h1>
-    <img src="/images/CAcert-logo.svg" width="510" height="116" alt="CAcert">
+    <body class="text-center idp">
     {{ template "content" . }}
     <script type="text/javascript" src="/js/cacert.bundle.js"></script>
     </body>

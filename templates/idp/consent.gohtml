@@ -1,24 +1,27 @@
 {{ define "content" }}
-    <p>{{ .IntroConsentRequested }}</p>
-    {{ if .client.LogoURI }}
-        <p>
-            <img src="{{ .client.LogoURI }}" alt="{{ .client.ClientName }}"/>
-        </p>
-    {{ end }}
-    <p>{{ .IntroMoreInformation }}</p>
-    <form method="post">
-        {{ .csrfField }}
-        <ul>
+    <form class="form-consent" method="post">
+        <img src="/images/CAcert-logo.svg" width="300" height="68" alt="CAcert" class="mb-4">
+        <h1 class="h3 mb-3">{{ .Title }}</h1>
+        <p class="text-left">{{ .IntroConsentRequested }}</p>
+        {{ if .client.LogoURI }}
+            <p>
+                <img src="{{ .client.LogoURI }}" alt="{{ .client.ClientName }}"/>
+            </p>
+        {{ end }}
+        <ul class="list-group text-left small mb-3">
             {{ range .requestedScope }}
-                <li>{{ .Label }}</li>
+                <li class="list-group-item">{{ .Label }}</li>
             {{ end }}
         </ul>
+        <p class="text-left">{{ .IntroMoreInformation }}</p>
 
-        <p>
-            <input type="checkbox" name="consent" id="consent" value="true"/> <label
-                    for="consent">{{ .LabelConsent }}</label>
-        </p>
+        {{ .csrfField }}
+        <div class="checkbox mb-3">
+            <label>
+                <input type="checkbox" name="consent" id="consent" value="true"/>
+                {{ .LabelConsent }}</label>
+        </div>
 
-        <button type="submit">{{ .LabelSubmit }}</button>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">{{ .LabelSubmit }}</button>
     </form>
 {{ end }}
