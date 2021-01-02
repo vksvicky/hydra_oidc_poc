@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/ory/hydra-client-go/models"
 	log "github.com/sirupsen/logrus"
 
+	"git.cacert.org/oidc_login/common/handlers"
 	commonServices "git.cacert.org/oidc_login/common/services"
 	"git.cacert.org/oidc_login/idp/services"
 )
@@ -70,8 +72,25 @@ func (h *consentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	consentData, err := h.adminClient.GetConsentRequest(
 		admin.NewGetConsentRequestParams().WithConsentChallenge(challenge))
 	if err != nil {
-		h.logger.Error("error getting consent information: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.logger.Errorf("error getting consent information: %v", err)
+		var errorDetails *handlers.ErrorDetails
+		switch v := err.(type) {
+		case *admin.GetConsentRequestConflict:
+			errorDetails = &handlers.ErrorDetails{
+				ErrorMessage: *v.Payload.Error,
+				ErrorDetails: []string{v.Payload.ErrorDescription},
+			}
+			if v.Payload.StatusCode != 0 {
+				errorDetails.ErrorCode = strconv.Itoa(int(v.Payload.StatusCode))
+			}
+			break
+		default:
+			errorDetails = &handlers.ErrorDetails{
+				ErrorMessage: "could not get consent details",
+				ErrorDetails: []string{http.StatusText(http.StatusInternalServerError)},
+			}
+		}
+		handlers.GetErrorBucket(r).AddError(errorDetails)
 		return
 	}
 
@@ -86,7 +105,11 @@ func (h *consentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		decoder := form.NewDecoder()
 		if err := decoder.Decode(&consentInfo, r.Form); err != nil {
 			h.logger.Error(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			http.Error(
+				w,
+				http.StatusText(http.StatusInternalServerError),
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
@@ -99,8 +122,8 @@ func (h *consentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				r.Context(),
 				`SELECT email, verified, fname, mname, lname, dob, language, modified
 FROM users
-WHERE uniqueID = ?
-  AND LOCKED = 0`,
+WHERE uniqueid = ?
+  AND locked = 0`,
 			)
 			if err != nil {
 				h.logger.Errorf("error preparing user information SQL: %v", err)
@@ -181,7 +204,13 @@ WHERE uniqueID = ?
 	}
 }
 
-func (h *consentHandler) renderConsentForm(w http.ResponseWriter, r *http.Request, consentData *admin.GetConsentRequestOK, err error, localizer *i18n.Localizer) {
+func (h *consentHandler) renderConsentForm(
+	w http.ResponseWriter,
+	r *http.Request,
+	consentData *admin.GetConsentRequestOK,
+	err error,
+	localizer *i18n.Localizer,
+) {
 	trans := func(id string, values ...map[string]interface{}) string {
 		if len(values) > 0 {
 			return h.messageCatalog.LookupMessage(id, values[0], localizer)

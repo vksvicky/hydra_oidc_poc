@@ -1,4 +1,3 @@
-[LabelAcceptCertLogin]
-description = "Label for a button to accept certificate login"
-hash = "sha1-95cf27f4bdee62b51ee8bc673d25a46bcceed452"
-other = "Ja, bitte nutze das Zertifikat"
+[ErrorTitle]
+hash = "sha1-736aec25a98f5ec5b71400bb0163f891f509b566"
+other = "Es ist ein Fehler aufgetreten"

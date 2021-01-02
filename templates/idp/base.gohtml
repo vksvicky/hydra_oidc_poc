@@ -26,8 +26,15 @@
         <meta name="theme-color" content="#11568c">
         <title>{{ .Title }}</title>
     </head>
-    <body class="text-center idp">
-    {{ template "content" . }}
+    <body class="text-center idp d-flex flex-column h-100">
+    <main role="main" class="flex-shrink-0">
+        {{ template "content" . }}
+    </main>
+    <footer class="footer mt-auto py-3">
+        <div class="container">
+            <span class="text-muted small">© 2020 <a href="https://www.cacert.org/">CAcert</a></span>
+        </div>
+    </footer>
     <script type="text/javascript" src="/js/cacert.bundle.js"></script>
     </body>
     </html>

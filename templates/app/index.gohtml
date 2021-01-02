@@ -1,5 +1,8 @@
 {{ define "content" }}
-    <h1>{{ .Greeting }}</h1>
-    <p>{{ .IntroductionText }}</p>
-    <a href="{{ .LogoutURL }}">{{ .LogoutLabel }}</a>
+    <div class="container">
+        <img src="/images/CAcert-logo.svg" width="300" height="68" alt="CAcert" class="mb-4">
+        <h1>{{ .Greeting }}</h1>
+        <p>{{ .IntroductionText }}</p>
+        <a class="btn btn-outline-primary" href="{{ .LogoutURL }}">{{ .LogoutLabel }}</a>
+    </div>
 {{ end }}

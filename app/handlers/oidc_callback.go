@@ -10,6 +10,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"git.cacert.org/oidc_login/app/services"
+	"git.cacert.org/oidc_login/common/handlers"
 	commonServices "git.cacert.org/oidc_login/common/services"
 )
 
@@ -28,7 +29,7 @@ type oidcCallbackHandler struct {
 
 func (c *oidcCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	if r.URL.Path != "/callback" {
@@ -39,7 +40,13 @@ func (c *oidcCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	errorText := r.URL.Query().Get("error")
 	errorDescription := r.URL.Query().Get("error_description")
 	if errorText != "" {
-		c.RenderErrorTemplate(w, errorText, errorDescription, http.StatusForbidden)
+		errorDetails := &handlers.ErrorDetails{
+			ErrorMessage: errorText,
+		}
+		if errorDescription != "" {
+			errorDetails.ErrorDetails = []string{errorDescription}
+		}
+		handlers.GetErrorBucket(r).AddError(errorDetails)
 		return
 	}
 
@@ -104,14 +111,6 @@ Not valid after:  %s
 	}
 
 	w.WriteHeader(http.StatusFound)
-}
-
-func (c *oidcCallbackHandler) RenderErrorTemplate(w http.ResponseWriter, errorText string, errorDescription string, status int) {
-	if errorDescription != "" {
-		http.Error(w, errorDescription, status)
-	} else {
-		http.Error(w, errorText, status)
-	}
 }
 
 func NewCallbackHandler(ctx context.Context, logger *log.Logger) *oidcCallbackHandler {

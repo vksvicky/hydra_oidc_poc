@@ -11,8 +11,9 @@ body {
 body.idp {
   display: -ms-flexbox;
   display: flex;
-  // -ms-flex-align: center;
-  // align-items: center;
+}
+
+.error-message, body.idp {
   padding-top: 40px;
   padding-bottom: 40px;
 }

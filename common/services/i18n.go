@@ -91,6 +91,10 @@ func InitI18n(ctx context.Context, logger *log.Logger, languages []string) conte
 
 func initMessageCatalog(logger *log.Logger) *MessageCatalog {
 	messages := make(map[string]*i18n.Message)
+	messages["ErrorTitle"] = &i18n.Message{
+		ID:    "ErrorTitle",
+		Other: "An error has occurred",
+	}
 	return &MessageCatalog{messages: messages, logger: logger}
 }
 

@@ -22,6 +22,10 @@ other = "Bitte gib ein Passwort ein."
 hash = "sha1-31632fcec9d22a8463757f459e51c7c0eccd1f28"
 other = "Dieses Feld wird benötigt."
 
+[ErrorTitle]
+hash = "sha1-736aec25a98f5ec5b71400bb0163f891f509b566"
+other = "Es ist ein Fehler aufgetreten"
+
 [ErrorUnknown]
 hash = "sha1-e5fd9aa24c9417e7332e6f25936ae2a6ec8f1524"
 other = "Unbekannter Fehler"

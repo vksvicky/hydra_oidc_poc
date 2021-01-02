@@ -11,21 +11,13 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-openapi/runtime/client"
 	"github.com/gorilla/csrf"
-	"github.com/knadh/koanf"
-	"github.com/knadh/koanf/parsers/toml"
-	"github.com/knadh/koanf/providers/confmap"
-	"github.com/knadh/koanf/providers/env"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/knadh/koanf/providers/posflag"
 	hydra "github.com/ory/hydra-client-go/client"
 	log "github.com/sirupsen/logrus"
-	flag "github.com/spf13/pflag"
 
 	commonHandlers "git.cacert.org/oidc_login/common/handlers"
 	commonServices "git.cacert.org/oidc_login/common/services"
@@ -34,45 +26,21 @@ import (
 )
 
 func main() {
-	f := flag.NewFlagSet("config", flag.ContinueOnError)
-	f.Usage = func() {
-		fmt.Println(f.FlagUsages())
-		os.Exit(0)
-	}
-	f.StringSlice("conf", []string{"idp.toml"}, "path to one or more .toml files")
 	logger := log.New()
-	var err error
-
-	if err = f.Parse(os.Args[1:]); err != nil {
-		logger.Fatal(err)
-	}
-
-	config := koanf.New(".")
-
-	_ = config.Load(confmap.Provider(map[string]interface{}{
-		"server.port":             3000,
-		"server.name":             "login.cacert.localhost",
-		"server.key":              "certs/idp.cacert.localhost.key",
-		"server.certificate":      "certs/idp.cacert.localhost.crt.pem",
-		"security.client.ca-file": "certs/client_ca.pem",
-		"admin.url":               "https://hydra.cacert.localhost:4445/",
-		"i18n.languages":          []string{"en", "de"},
-	}, "."), nil)
-	cFiles, _ := f.GetStringSlice("conf")
-	for _, c := range cFiles {
-		if err := config.Load(file.Provider(c), toml.Parser()); err != nil {
-			logger.Fatalf("error loading config file: %s", err)
-		}
-	}
-	if err := config.Load(posflag.Provider(f, ".", config), nil); err != nil {
-		logger.Fatalf("error loading configuration: %s", err)
-	}
-	const prefix = "IDP_"
-	if err := config.Load(env.Provider(prefix, ".", func(s string) string {
-		return strings.Replace(strings.ToLower(
-			strings.TrimPrefix(s, prefix)), "_", ".", -1)
-	}), nil); err != nil {
-		log.Fatalf("error loading config: %v", err)
+	config, err := commonServices.ConfigureApplication(
+		logger,
+		"IDP",
+		map[string]interface{}{
+			"server.port":             3000,
+			"server.name":             "login.cacert.localhost",
+			"server.key":              "certs/idp.cacert.localhost.key",
+			"server.certificate":      "certs/idp.cacert.localhost.crt.pem",
+			"security.client.ca-file": "certs/client_ca.pem",
+			"admin.url":               "https://hydra.cacert.localhost:4445/",
+			"i18n.languages":          []string{"en", "de"},
+		})
+	if err != nil {
+		log.Fatalf("error loading configuration: %v", err)
 	}
 
 	logger.Infoln("Server is starting")
@@ -139,6 +107,14 @@ func main() {
 		csrf.Secure(true),
 		csrf.SameSite(csrf.SameSiteStrictMode),
 		csrf.MaxAge(600))
+	errorMiddleware, err := commonHandlers.ErrorHandling(
+		ctx,
+		logger,
+		"templates/idp",
+	)
+	if err != nil {
+		logger.Fatalf("could not initialize request error handling: %v", err)
+	}
 
 	clientCertPool := x509.NewCertPool()
 	pemBytes, err := ioutil.ReadFile(config.MustString("security.client.ca-file"))
@@ -155,7 +131,7 @@ func main() {
 	}
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port")),
-		Handler:      tracing(logging(hsts(csrfProtect(router)))),
+		Handler:      tracing(logging(hsts(errorMiddleware(csrfProtect(router))))),
 		ReadTimeout:  20 * time.Second,
 		WriteTimeout: 20 * time.Second,
 		IdleTimeout:  30 * time.Second,

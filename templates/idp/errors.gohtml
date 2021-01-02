@@ -1,0 +1,13 @@
+{{ define "content" }}
+    <div class="container">
+        <img src="/images/CAcert-logo.svg" width="300" height="68" alt="CAcert" class="mb-4">
+        <h1>{{ .Title }}</h1>
+        <h2>{{ if .details.ErrorCode }}
+                <strong>{{ .details.ErrorCode }}</strong> {{ end }}{{ .details.ErrorMessage }}</h2>
+        {{ if .details.ErrorDetails }}
+            {{ range .details.ErrorDetails }}
+                <p>{{ . }}</p>
+            {{ end }}
+        {{ end }}
+    </div>
+{{ end }}

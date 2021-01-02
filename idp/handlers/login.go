@@ -7,9 +7,9 @@ import (
 	"encoding/hex"
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 
-	"github.com/go-openapi/runtime"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/csrf"
@@ -19,6 +19,7 @@ import (
 	"github.com/ory/hydra-client-go/models"
 	log "github.com/sirupsen/logrus"
 
+	"git.cacert.org/oidc_login/common/handlers"
 	commonServices "git.cacert.org/oidc_login/common/services"
 	"git.cacert.org/oidc_login/idp/services"
 )
@@ -143,15 +144,33 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// finish login and redirect to target
 		loginRequest, err := h.adminClient.AcceptLoginRequest(
-			admin.NewAcceptLoginRequestParams().WithLoginChallenge(challenge).WithBody(&models.AcceptLoginRequest{
-				Acr:         string(authMethod),
-				Remember:    true,
-				RememberFor: 0,
-				Subject:     userId,
-			}).WithTimeout(time.Second * 10))
+			admin.NewAcceptLoginRequestParams().WithLoginChallenge(challenge).WithBody(
+				&models.AcceptLoginRequest{
+					Acr:         string(authMethod),
+					Remember:    true,
+					RememberFor: 0,
+					Subject:     userId,
+				}).WithTimeout(time.Second * 10))
 		if err != nil {
 			h.logger.Errorf("error getting login request: %#v", err)
-			http.Error(w, err.Error(), err.(*runtime.APIError).Code)
+			var errorDetails *handlers.ErrorDetails
+			switch v := err.(type) {
+			case *admin.AcceptLoginRequestNotFound:
+				errorDetails = &handlers.ErrorDetails{
+					ErrorMessage: *v.Payload.Error,
+					ErrorDetails: []string{v.Payload.ErrorDescription},
+				}
+				if v.Payload.StatusCode != 0 {
+					errorDetails.ErrorCode = strconv.Itoa(int(v.Payload.StatusCode))
+				}
+				break
+			default:
+				errorDetails = &handlers.ErrorDetails{
+					ErrorMessage: "could not accept login",
+					ErrorDetails: []string{err.Error()},
+				}
+			}
+			handlers.GetErrorBucket(r).AddError(errorDetails)
 			return
 		}
 		w.Header().Add("Location", *loginRequest.GetPayload().RedirectTo)
@@ -255,7 +274,7 @@ func (h *loginHandler) performCertificateLogin(emails []string, r *http.Request)
 	db := services.GetDb(h.context)
 
 	query, args, err := sqlx.In(
-		`SELECT DISTINCT u.uniqueID
+		`SELECT DISTINCT u.uniqueid
 FROM users u
          JOIN email e ON e.memid = u.id
 WHERE e.email IN (?)
