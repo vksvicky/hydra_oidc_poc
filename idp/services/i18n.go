@@ -44,27 +44,15 @@ func AddMessages(ctx context.Context) {
 	}
 	messages["IntroConsentRequested"] = &i18n.Message{
 		ID:    "IntroConsentRequested",
-		Other: "The <strong>{{ .client }}</strong> application wants your consent for the requested set of permissions.",
+		Other: "The <strong>{{ .client }}</strong> application requested your consent for the following set of permissions:",
 	}
 	messages["IntroConsentMoreInformation"] = &i18n.Message{
 		ID:    "IntroConsentMoreInformation",
 		Other: "You can find more information about <strong>{{ .client }}</strong> at <a href=\"{{ .clientLink }}\">its description page</a>.",
 	}
-	messages["Scope-openid-Description"] = &i18n.Message{
-		ID:    "Scope-openid-Description",
-		Other: "Request information about your identity.",
-	}
-	messages["Scope-offline_access-Description"] = &i18n.Message{
-		ID:    "Scope-offline_access-Description",
-		Other: "Keep access to your information until you revoke the permission.",
-	}
-	messages["Scope-profile-Description"] = &i18n.Message{
-		ID:    "Scope-profile-Description",
-		Other: "Access your user profile information including your name, birth date and locale.",
-	}
-	messages["Scope-email-Description"] = &i18n.Message{
-		ID:    "Scope-email-Description",
-		Other: "Access your primary email address.",
+	messages["ClaimsInformation"] = &i18n.Message{
+		ID:    "ClaimsInformation",
+		Other: "In addition the application wants access to the following information:",
 	}
 	messages["WrongOrLockedUserOrInvalidPassword"] = &i18n.Message{
 		ID:    "WrongOrLockedUserOrInvalidPassword",

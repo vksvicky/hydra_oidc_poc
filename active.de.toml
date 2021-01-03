@@ -6,6 +6,10 @@ other = "Du hast ein gültiges Client-Zertifikat für die folgenden E-Mail-Adres
 hash = "sha1-c1ad2600848ad6293ae6df6a04b0b2318bb303f9"
 other = "Willst du dieses Zertifikat für die Anmeldung verwenden oder möchtest du lieber ein anderes Verfahren nutzen?"
 
+[ClaimsInformation]
+hash = "sha1-4a6721995b5d87c02be77695910af642ca30b18a"
+other = "Zusätzlich möchte die Anwendung Zugriff auf folgende Informationen:"
+
 [ErrorEmail]
 hash = "sha1-d2306dd8970ff616631a3501791297f31475e416"
 other = "Bitte gib eine gültige E-Mailadresse ein."
@@ -57,8 +61,8 @@ hash = "sha1-f58b8378238bd433deef3c3e6b0b70d0fd0dd59e"
 other = "Auf der <a href=\"{{ .clientLink }}\">Beschreibungsseite</a> findest du mehr Informationen zu <strong>{{ .client }}</strong>."
 
 [IntroConsentRequested]
-hash = "sha1-cb8efc74b5b726201321e0924747bf38d39629a1"
-other = "Die Anwendung <strong>{{ .client }}</strong> benötigt deine Einwilligungung für die angefragten Berechtigungen."
+hash = "sha1-3ac6a3583d40b5e8930c57531f0be9706f1e0194"
+other = "Die Anwendung <strong>{{ .client }}</strong> hat deine Zustimmung für die Erteilung der folgenden Berechtigungen angefragt:"
 
 [LabelAcceptCertLogin]
 description = "Label for a button to accept certificate login"
@@ -96,9 +100,9 @@ other = "Ausloggen"
 hash = "sha1-e50e5ea384cad8fac6f918d698be373b1362b351"
 other = "Zugriff auf deine primäre E-Mail-Adresse."
 
-[Scope-offline_access-Description]
+[Scope-offline-Description]
 hash = "sha1-732881bf998daa62cbad8615b2e6feb7a053b123"
-other = "Zugriff auf deine Informationen behalten, bis du diese Zustimmung widerrufst."
+other = "Zugriff auf deine Daten behalten, bis du diese Berechtigung widerrufst."
 
 [Scope-openid-Description]
 hash = "sha1-0ad714e7a22b97d8247b70254990256bffa2ef76"
@@ -115,3 +119,7 @@ other = "Anwendung erbittet deine Zustimmung"
 [WrongOrLockedUserOrInvalidPassword]
 hash = "sha1-87e0a0ac67c6c3a06bed184e10b22aae4d075b64"
 other = "Du hast einen ungültigen Nutzernamen oder ein ungültiges Passwort eingegeben oder dein Benutzerkonto wurde gesperrt."
+
+[claim-CAcert-groups-description]
+hash = "sha1-62e8788623838cfe2185e315d3a979cbb2eea3b5"
+other = "Deine CAcert-Team- oder Gruppenzugehörigkeiten."

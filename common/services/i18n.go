@@ -64,7 +64,16 @@ func (m *MessageCatalog) LookupMessage(id string, templateData map[string]interf
 			TemplateData:   templateData,
 		})
 		if err != nil {
-			m.logger.Error(err)
+			switch err.(type) {
+			case *i18n.MessageNotFoundErr:
+				m.logger.Warnf("message %s not found: %v", id, err)
+				if translation != "" {
+					return translation
+				}
+				break
+			default:
+				m.logger.Error(err)
+			}
 			return id
 		}
 		return translation

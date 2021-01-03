@@ -1,3 +1,7 @@
-[ErrorTitle]
-hash = "sha1-736aec25a98f5ec5b71400bb0163f891f509b566"
-other = "Es ist ein Fehler aufgetreten"
+[ClaimsInformation]
+hash = "sha1-4a6721995b5d87c02be77695910af642ca30b18a"
+other = "Zusätzlich möchte die Anwendung Zugriff auf folgende Informationen:"
+
+[IntroConsentRequested]
+hash = "sha1-3ac6a3583d40b5e8930c57531f0be9706f1e0194"
+other = "Die Anwendung <strong>{{ .client }}</strong> hat deine Zustimmung für die Erteilung der folgenden Berechtigungen angefragt:"

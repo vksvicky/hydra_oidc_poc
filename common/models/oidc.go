@@ -147,12 +147,20 @@ func (i IndividualClaimRequest) AllowedValues() []string {
 // OpenIDConfiguration contains the parts of the OpenID discovery information
 // that are relevant for us.
 //
-// Specification
+// Specifications
 //
-// See https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
+// https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
+//
+// https://openid.net/specs/openid-connect-rpinitiated-1_0.html#OPMetadata
 type OpenIDConfiguration struct {
-	AuthorizationEndpoint string `json:"authorization_endpoint"`
-	TokenEndpoint         string `json:"token_endpoint"`
-	JwksUri               string `json:"jwks_uri"`
-	EndSessionEndpoint    string `json:"end_session_endpoint"`
+	Issuer                string   `json:"issuer"`
+	AuthorizationEndpoint string   `json:"authorization_endpoint"`
+	TokenEndpoint         string   `json:"token_endpoint"`
+	UserInfoEndpoint      string   `json:"userinfo_endpoint"`
+	JwksUri               string   `json:"jwks_uri"`
+	RegistrationEndpoint  string   `json:"registration_endpoint"`
+	ScopesSupported       []string `json:"scopes_supported"`
+	EndSessionEndpoint    string   `json:"end_session_endpoint"`
+	ClaimTypesSupported   []string `json:"claim_types_supported"`
+	ClaimsSupported       []string `json:"claims_supported"`
 }
