@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +22,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"git.cacert.org/oidc_login/common/handlers"
+	models2 "git.cacert.org/oidc_login/common/models"
 	commonServices "git.cacert.org/oidc_login/common/services"
 	"git.cacert.org/oidc_login/idp/services"
 )
@@ -147,10 +150,16 @@ WHERE uniqueid = ?
 				for _, scope := range consentData.GetPayload().RequestedScope {
 					switch scope {
 					case "email":
+						// email
+						// OPTIONAL. This scope value requests access to the email and email_verified Claims.
 						idTokenData[openid.EmailKey] = userInfo.Email
 						idTokenData[openid.EmailVerifiedKey] = userInfo.EmailVerified
 						break
 					case "profile":
+						// profile
+						// OPTIONAL. This scope value requests access to the End-User's default profile Claims, which
+						// are: name, family_name, given_name, middle_name, nickname, preferred_username, profile,
+						// picture, website, gender, birthdate, zoneinfo, locale, and updated_at.
 						idTokenData[openid.GivenNameKey] = userInfo.GivenName
 						idTokenData[openid.FamilyNameKey] = userInfo.FamilyName
 						idTokenData[openid.MiddleNameKey] = userInfo.MiddleName
@@ -163,6 +172,14 @@ WHERE uniqueid = ?
 						if userInfo.Modified.Valid {
 							idTokenData[openid.UpdatedAtKey] = userInfo.Modified.Time.Unix()
 						}
+						break
+					case "address":
+						// address
+						// OPTIONAL. This scope value requests access to the address Claim.
+						break
+					case "phone":
+						// phone
+						// OPTIONAL. This scope value requests access to the phone_number and phone_number_verified Claims.
 						break
 					}
 				}
@@ -216,6 +233,21 @@ func (h *consentHandler) renderConsentForm(
 			return h.messageCatalog.LookupMessage(id, values[0], localizer)
 		}
 		return h.messageCatalog.LookupMessage(id, nil, localizer)
+	}
+
+	var requestedClaims models2.OIDCClaimsRequest
+	requestUrl, err := url.Parse(consentData.Payload.RequestURL)
+	if err != nil {
+		h.logger.Warnf("could not parse original request URL %s: %v", consentData.Payload.RequestURL, err)
+	} else {
+		claimsParameter := requestUrl.Query().Get("claims")
+		if claimsParameter != "" {
+			decoder := json.NewDecoder(strings.NewReader(claimsParameter))
+			err := decoder.Decode(&requestedClaims)
+			if err != nil {
+				h.logger.Warnf("ignoring claims request parameter %s that could not be decoded: %v", claimsParameter, err)
+			}
+		}
 	}
 
 	// render consent form

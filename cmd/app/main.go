@@ -87,7 +87,7 @@ func main() {
 
 	services.InitSessionStore(logger, sessionPath, sessionAuthKey, sessionEncKey)
 
-	authMiddleware := handlers.Authenticate(ctx, oidcClientId)
+	authMiddleware := handlers.Authenticate(ctx, logger, oidcClientId)
 
 	serverAddr := fmt.Sprintf("%s:%d", config.String("server.name"), config.Int("server.port"))
 
