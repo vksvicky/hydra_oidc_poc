@@ -8,6 +8,7 @@
   },
   "private": true,
   "author": "Jan Dittberner",
+  "license": "Apache-2.0",
   "devDependencies": {
     "autoprefixer": "^9.8.6",
     "bootstrap": "^4.5.3",

@@ -5,6 +5,11 @@ provider and an application using OIDC. [ORY Hydra](https://www.ory.sh/hydra/)
 is used for the actual OAuth2 / OpenID Connect operations. The implementation
 in this repository provides the UI components that are required by Hydra.
 
+The code in this repository is licensed under the terms of the Apache License
+Version 2.0.
+
+Copyright © 2020, 2021  Jan Dittberner
+
 ## Setup
 
 ### Certificates
