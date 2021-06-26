@@ -70,7 +70,26 @@ func main() {
 	if err != nil {
 		logger.Fatalf("error parsing admin URL: %v", err)
 	}
-	clientTransport := client.New(adminURL.Host, adminURL.Path, []string{adminURL.Scheme})
+	tlsClientConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	if config.Exists("api-client.rootCAs") {
+		rootCAFile := config.MustString("api-client.rootCAs")
+		caCertPool := x509.NewCertPool()
+		pemBytes, err := ioutil.ReadFile(rootCAFile)
+		if err != nil {
+			log.Fatalf("could not read CA certificate file: %v", err)
+		}
+		caCertPool.AppendCertsFromPEM(pemBytes)
+		tlsClientConfig.RootCAs = caCertPool
+	}
+
+	tlsClientTransport := &http.Transport{TLSClientConfig: tlsClientConfig}
+	httpClient := &http.Client{Transport: tlsClientTransport}
+	clientTransport := client.NewWithClient(
+		adminURL.Host,
+		adminURL.Path,
+		[]string{adminURL.Scheme},
+		httpClient,
+	)
 	adminClient := hydra.New(clientTransport, nil)
 
 	ctx, err = services.InitDatabase(ctx, services.NewDatabaseParams(config.MustString("db.dsn")))

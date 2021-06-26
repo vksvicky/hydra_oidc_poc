@@ -101,8 +101,7 @@ func DiscoverOIDC(ctx context.Context, logger *log.Logger, params *OidcParams) (
 		Scopes: []string{"openid", "offline"},
 	}
 	ctx = context.WithValue(ctx, ctxOAuth2Config, oauth2Config)
-
-	keySet, err := jwk.FetchHTTP(discoveryResponse.JwksUri, jwk.WithHTTPClient(params.APIClient))
+	keySet, err := jwk.Fetch(ctx, discoveryResponse.JwksUri, jwk.WithHTTPClient(params.APIClient))
 	if err != nil {
 		log.Fatalf("could not fetch JWKs: %s", err)
 	}
@@ -128,6 +127,6 @@ func GetOAuth2Config(ctx context.Context) *oauth2.Config {
 // Get the JSON Web Key set from the context.
 //
 // DiscoverOIDC needs to be called before this is available.
-func GetJwkSet(ctx context.Context) *jwk.Set {
-	return ctx.Value(ctxOidcJwks).(*jwk.Set)
+func GetJwkSet(ctx context.Context) jwk.Set {
+	return ctx.Value(ctxOidcJwks).(jwk.Set)
 }

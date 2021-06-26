@@ -1,7 +1,6 @@
 /*
  Copyright 2020, 2021 Jan Dittberner
 
-
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -89,11 +88,10 @@ func getRequestedClaims(logger *log.Logger) string {
 	return buf.String()
 }
 
-func ParseIdToken(token string, keySet *jwk.Set) (openid.Token, error) {
-	if parsedIdToken, err := jwt.ParseString(token, jwt.WithKeySet(keySet), jwt.WithOpenIDClaims()); err != nil {
+func ParseIdToken(token string, keySet jwk.Set) (openid.Token, error) {
+	if parsedIdToken, err := jwt.ParseString(token, jwt.WithKeySet(keySet), jwt.WithToken(openid.New())); err != nil {
 		return nil, err
 	} else {
 		return parsedIdToken.(openid.Token), nil
 	}
-
 }

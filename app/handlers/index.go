@@ -34,7 +34,7 @@ import (
 type indexHandler struct {
 	bundle         *i18n.Bundle
 	indexTemplate  *template.Template
-	keySet         *jwk.Set
+	keySet         jwk.Set
 	logoutUrl      string
 	messageCatalog *commonServices.MessageCatalog
 	serverAddr     string

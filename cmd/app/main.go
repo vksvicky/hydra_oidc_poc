@@ -20,8 +20,10 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -93,11 +95,28 @@ func main() {
 		log.Infof("put the following in your resource_app.toml:\n%s", string(tomlData))
 	}
 
+	tlsClientConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+	if config.Exists("api-client.rootCAs") {
+		rootCAFile := config.MustString("api-client.rootCAs")
+		caCertPool := x509.NewCertPool()
+		pemBytes, err := ioutil.ReadFile(rootCAFile)
+		if err != nil {
+			log.Fatalf("could not read CA certificate file: %v", err)
+		}
+		caCertPool.AppendCertsFromPEM(pemBytes)
+		tlsClientConfig.RootCAs = caCertPool
+	}
+
+	apiTransport := &http.Transport{TLSClientConfig: tlsClientConfig}
+	apiClient := &http.Client{Transport: apiTransport}
+
 	if ctx, err = commonServices.DiscoverOIDC(ctx, logger, &commonServices.OidcParams{
 		OidcServer:       oidcServer,
 		OidcClientId:     oidcClientId,
 		OidcClientSecret: oidcClientSecret,
-		APIClient:        &http.Client{},
+		APIClient:        apiClient,
 	}); err != nil {
 		log.Fatalf("OpenID Connect discovery failed: %s", err)
 	}

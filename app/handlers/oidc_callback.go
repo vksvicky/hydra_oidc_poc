@@ -39,7 +39,7 @@ const (
 )
 
 type oidcCallbackHandler struct {
-	keySet       *jwk.Set
+	keySet       jwk.Set
 	logger       *log.Logger
 	oauth2Config *oauth2.Config
 }

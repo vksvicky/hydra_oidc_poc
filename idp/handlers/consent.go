@@ -24,7 +24,6 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -58,6 +57,7 @@ type ConsentInformation struct {
 	ConsentChecked bool     `form:"consent"`
 }
 
+//goland:noinspection GoDeprecation needs mysql.NullTime needs to be used because sql.NullTime cannot handle byte arrays
 type UserInfo struct {
 	Email         string         `db:"email"`
 	EmailVerified bool           `db:"verified"`
@@ -216,21 +216,9 @@ func (h *consentHandler) getRequestedConsentInformation(challenge string, r *htt
 	if err != nil {
 		h.logger.Errorf("error getting consent information: %v", err)
 		var errorDetails *handlers.ErrorDetails
-		switch v := err.(type) {
-		case *admin.GetConsentRequestConflict:
-			errorDetails = &handlers.ErrorDetails{
-				ErrorMessage: *v.Payload.Error,
-				ErrorDetails: []string{v.Payload.ErrorDescription},
-			}
-			if v.Payload.StatusCode != 0 {
-				errorDetails.ErrorCode = strconv.Itoa(int(v.Payload.StatusCode))
-			}
-			break
-		default:
-			errorDetails = &handlers.ErrorDetails{
-				ErrorMessage: "could not get consent details",
-				ErrorDetails: []string{http.StatusText(http.StatusInternalServerError)},
-			}
+		errorDetails = &handlers.ErrorDetails{
+			ErrorMessage: "could not get consent details",
+			ErrorDetails: []string{http.StatusText(http.StatusInternalServerError)},
 		}
 		handlers.GetErrorBucket(r).AddError(errorDetails)
 		return nil, nil, err
@@ -398,7 +386,13 @@ WHERE uniqueid = ?
 	}
 }
 
-func (h *consentHandler) fillTokenData(m map[string]interface{}, requestedScope models.StringSlicePipeDelimiter, claimsRequest *commonModels.OIDCClaimsRequest, consentInformation ConsentInformation, userInfo *UserInfo) {
+func (h *consentHandler) fillTokenData(
+	m map[string]interface{},
+	requestedScope models.StringSlicePipeDelimiter,
+	claimsRequest *commonModels.OIDCClaimsRequest,
+	consentInformation ConsentInformation,
+	userInfo *UserInfo,
+) {
 	for _, scope := range requestedScope {
 		granted := false
 		for _, k := range consentInformation.GrantedScopes {
